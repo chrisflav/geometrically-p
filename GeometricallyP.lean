@@ -1,0 +1,8 @@
+import GeometricallyP.Algebra.Irreducible
+import GeometricallyP.Geometry.Basic
+import GeometricallyP.Geometry.Irreducible
+import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UnderlyingMap
+import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UniversallyOpen
+import GeometricallyP.Mathlib.CategoryTheory.ObjectProperty.Stability
+import GeometricallyP.Mathlib.Topology.Irreducible
+import GeometricallyP.SchemeDemo
