@@ -1,8 +1,15 @@
+import GeometricallyP.Algebra.Connected
+import GeometricallyP.Algebra.GeometricallyConnected
+import GeometricallyP.Algebra.GeometricallyIrreducible
 import GeometricallyP.Algebra.Irreducible
+import GeometricallyP.Algebra.TensorProduct
 import GeometricallyP.Geometry.Basic
-import GeometricallyP.Geometry.Irreducible
+import GeometricallyP.Geometry.GeometricallyIrreducible
+import GeometricallyP.Mathlib.Algebra.CharP.Lemmas
 import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UnderlyingMap
 import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UniversallyOpen
 import GeometricallyP.Mathlib.CategoryTheory.ObjectProperty.Stability
+import GeometricallyP.Mathlib.FieldTheory.PurelyInseparable.Basic
+import GeometricallyP.Mathlib.Topology.Homeomorph.Lemmas
 import GeometricallyP.Mathlib.Topology.Irreducible
 import GeometricallyP.SchemeDemo

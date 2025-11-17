@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Christian Merten
 -/
 import GeometricallyP.Geometry.Basic
-import GeometricallyP.Algebra.Irreducible
+import GeometricallyP.Algebra.GeometricallyIrreducible
 import GeometricallyP.Mathlib.Topology.Irreducible
 import Mathlib.AlgebraicGeometry.Morphisms.UniversallyOpen
 
@@ -75,7 +75,7 @@ lemma of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
 
 /-- Being geometrically irreducible can be checked on finite extensions. -/
 lemma of_finite
-    (H : ∀ (K : Type u) [Field K] [Algebra k K] [Module.Finite k K],
+    (H : ∀ (K : Type u) [Field K] [Algebra k K] [Module.Finite k K] [Algebra.IsSeparable k K],
       IrreducibleSpace ↑(pullback s (Spec (.of K) ↘ Spec (.of k)))) :
     GeometricallyIrreducible s :=
   sorry
