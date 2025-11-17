@@ -27,6 +27,14 @@ Most `sorry`s have accompanying comments containing references to theorems that 
 be used in the proof. If the statement has a corresponding stacks project lemma,
 the tag is given with the `@[stacks TAG]` attribute.
 
+The folder `GeometricallyP/Mathlib` mimics the folder structure of
+[mathlib](https://github.com/leanprover-community/mathlib4/tree/master/Mathlib). Contents
+of a file `GeometricallyP/Mathlib/A/B/C.lean` are meant to be upstreamed
+(i.e., contributed) to `mathlib` at `Mathlib/A/B/C.lean`. The files under `GeometricallyP/Mathlib`
+should only import other files from `GeometricallyP/Mathlib`. We will
+likely start part of the upstreaming during the workshop and continue to do so after the project's
+completion.
+
 ## Contributing
 
 All project members have push access to non-master branches of this repository. To contribute,
