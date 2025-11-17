@@ -26,3 +26,9 @@ lemmas relating the geometric notions to the commutative algebra notions.
 Most `sorry`s have accompanying comments containing references to theorems that should
 be used in the proof. If the statement has a corresponding stacks project lemma,
 the tag is given with the `@[stacks TAG]` attribute.
+
+## Contributing
+
+All project members have push access to non-master branches of this repository. To contribute,
+please clone this project and work on a new branch. To add your changes to `master`, please open a
+pull request from your branch.
