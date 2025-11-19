@@ -139,6 +139,11 @@ private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [I
     IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) := by
   have : IsJacobsonRing R := isJacobsonRing_of_finiteType (A := k)
   have : closure (closedPoints (PrimeSpectrum R)) = Set.univ := closure_closedPoints
+  have h := (IrreducibleSpace.isIrreducible_univ
+    (PrimeSpectrum R)).isPreirreducible.preimage_of_dense_isPreirreducible_fiber
+    (X := PrimeSpectrum (R ⊗[k] S))
+    (f := comap <| (Algebra.TensorProduct.includeLeft (R := k) (A := R) (S := k)).toRingHom)
+
   #check irreducibleSpace_of_isOpenMap_of_dense (S := R ⊗[k] S)
   sorry
 
