@@ -5,6 +5,7 @@ Authors: Christian Merten
 -/
 import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 import Mathlib.FieldTheory.IsSepClosed
+import Mathlib.FieldTheory.LinearDisjoint
 import Mathlib.RingTheory.Spectrum.Prime.Topology
 import GeometricallyP.Algebra.Irreducible
 
@@ -79,13 +80,51 @@ theorem of_irreducibleSpace_of_isSepClosed (Ω : Type*) [Field Ω] [Algebra k Ω
   -/
   sorry
 
+/-- If K/k is a finte separable extension and L a field over k then L ⊗[k] K is a field -/
+lemma FinSepExTensorIsField (k K L : Type*) [Field k] [Field K] [Field L] [Algebra k K] [Algebra k L] [Module.Finite k K] [Algebra.IsSeparable k K] : IsField (L ⊗[k] K) := by
+  --#check k⟮α⟯
+  let a := (Field.exists_primitive_element k K).choose
+  let ha  : IntermediateField.adjoin k {a} = ⊤ := (Field.exists_primitive_element k K).choose_spec
+
+  let a2 : (L ⊗[k] K) := (1:L) ⊗ₜ[k] a
+
+  let M := Algebra.adjoin L {a2}
+
+  let : M ≃ₐ (L ⊗[k] K) := by sorry
+
+  --L⊗[k]K= L(a) qui est un corps
+  sorry
+
 /-- If `K` is geometrically irreducible over `k` and `R` is geometrically irreducible over `K`,
 then `R` is geometrically irreducible over `k`. -/
 @[stacks 0G30]
 lemma trans (K : Type*) [Field K] [Algebra k K] [Algebra K R] [IsScalarTower k K R]
     [GeometricallyIrreducible k K] [GeometricallyIrreducible K R] :
-    GeometricallyIrreducible k R :=
-  sorry
+    GeometricallyIrreducible k R := by
+      apply of_forall_irreducibleSpace_of_isSeparable
+      intro k' _ _ _ _
+
+      let K' := K ⊗[k] k'
+
+      let : Algebra K K' := TensorProduct.leftAlgebra
+
+      let : Algebra k' K' := TensorProduct.rightAlgebra
+
+      have : IsScalarTower k K K' := isScalarTower_left
+
+      have : IsScalarTower k k' K' := Algebra.TensorProduct.right_isScalarTower
+
+      have cb: (K' ⊗[K] R) ≃+* k' ⊗[k] R := (Algebra.TensorProduct.comm K K' R).toRingEquiv.trans <| (Algebra.TensorProduct.cancelBaseChange k K K R k').toRingEquiv.trans (Algebra.TensorProduct.comm k R k').toRingEquiv
+
+      suffices IrreducibleSpace (PrimeSpectrum ((K' ⊗[K] R))) by
+        let homeo := Homeomorph.isHomeomorph ((PrimeSpectrum.homeomorphOfRingEquiv cb))
+        exact IsHomeomorph.irreducibleSpace _ homeo
+
+      let : Field K' := by
+        apply IsField.toField
+        apply FinSepExTensorIsField
+
+      exact  irreducibleSpace K R K'
 
 /-- Let `K` over k` be a field extension. Then `K` is geometrically irreducible over `k`
 if and only if every `k`-separable, algebraic element `x : K` is contained in `k`. -/
