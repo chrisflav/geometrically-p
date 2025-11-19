@@ -83,7 +83,7 @@ theorem irreducibleSpace [Algebra.GeometricallyIrreducible k R]
       exact inst_3
     have hF : IrreducibleSpace (PrimeSpectrum F) := inferInstance
     have this := PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed (k:=kk) hF hR
-
+    sorry
   sorry
 
 /-- If `Ω` is a separably closed extension of `k` such that `Spec (Ω ⊗[k] R)` is irreducible,
