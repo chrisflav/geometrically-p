@@ -54,30 +54,50 @@ lemma iff_irreducibleSpace_separableClosure :
 theorem of_forall_irreducibleSpace_of_isSeparable
     (H : ∀ (K : Type u) [Field K] [Algebra k K] [Module.Finite k K] [Algebra.IsSeparable k K],
       IrreducibleSpace (PrimeSpectrum (K ⊗[k] R))) :
-    Algebra.GeometricallyIrreducible k R :=
+    Algebra.GeometricallyIrreducible k R := by
   /-
   uses `PrimeSpectrum.irreducibleSpace_of_isSeparable` and `iff_irreducibleSpace_separableClosure`
   -/
-  sorry
+  rw [iff_irreducibleSpace_separableClosure]
+  exact PrimeSpectrum.irreducibleSpace_of_isSeparable H (SeparableClosure k)
 
 /-- If `R` is geometrically irreducible over `k`, for every field extension `K` of `k`, the
 prime spectrum `Spec (K ⊗[k] R)` is irreducible. -/
 @[stacks 037K "(4) => (1)"]
 theorem irreducibleSpace [Algebra.GeometricallyIrreducible k R]
     (K : Type*) [Field K] [Algebra k K] :
-    IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) :=
+    IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) := by
   -- uses `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed`
+  expose_names
+  let kk := AlgebraicClosure k
+  -- let A := K ⊗[k] kk
+  -- have : Algebra kk A := by sorry
+  -- obtain ⟨m, mm⟩ := Ideal.exists_maximal A
+  -- let F :=  A ⧸ m
+  let F := AlgebraicClosure K
+  have : Algebra kk F := sorry
+  have hF : IrreducibleSpace (PrimeSpectrum (F ⊗[k] R)) := by
+    have e : F ⊗[k] R ≃ₐ[k] F ⊗[kk] (kk ⊗[k] R) := sorry
+    have hR : IrreducibleSpace (PrimeSpectrum (kk ⊗[k] R)) := by
+      rw [← geometricallyIrreducible_iff]
+      exact inst_3
+    have hF : IrreducibleSpace (PrimeSpectrum F) := inferInstance
+    have this := PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed (k:=kk) hF hR
+
   sorry
 
 /-- If `Ω` is a separably closed extension of `k` such that `Spec (Ω ⊗[k] R)` is irreducible,
 `R` is geometrically irreducible over `k`. -/
 theorem of_irreducibleSpace_of_isSepClosed (Ω : Type*) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
     (H : IrreducibleSpace (PrimeSpectrum (Ω ⊗[k] R))) :
-    Algebra.GeometricallyIrreducible k R :=
+    Algebra.GeometricallyIrreducible k R := by
+    rw [iff_irreducibleSpace_separableClosure]
+    have : Algebra (SeparableClosure k) Ω := by sorry
+    -- exact PrimeSpectrum.irreducibleSpace_of_isScalarTower (SeparableClosure k) Ω
+    sorry
   /-
   use `iff_irreducibleSpace_separableClosure` and `PrimeSpectrum.irreducibleSpace_of_isScalarTower`
   -/
-  sorry
 
 /-- If `K` is geometrically irreducible over `k` and `R` is geometrically irreducible over `K`,
 then `R` is geometrically irreducible over `k`. -/
