@@ -99,10 +99,35 @@ lemma PrimeSpectrum.irreducibleSpace_iff_of_isAlgClosure_of_isSepClosure
   obtain ⟨inst, _, h⟩ := exists_algebra_isPurelyInseparable_of_isSepClosure_of_isAlgClosure k K L
   rw [PrimeSpectrum.irreducibleSpace_iff_of_isPurelyInseparable k R K L]
 
+@[stacks 00I7 "For domains of finite type over `k`."]
+private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [IsAlgClosed k]
+    {S : Type*} [CommRing S] [Algebra k S] [Algebra.FiniteType k S]
+    [IsDomain S] [Algebra.FiniteType k R] [IsDomain R]
+    (hR : IrreducibleSpace (PrimeSpectrum R))
+    (hS : IrreducibleSpace (PrimeSpectrum S)) :
+    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
+  sorry
+
+example {R S A B : Type*} [CommRing R] [CommRing A] [CommRing S] [CommRing B]
+    [Algebra R S] [Algebra R A] [Algebra R B] [Algebra A B] [IsScalarTower R A B] :
+    Algebra (A ⊗[R] S) (B ⊗[R] S) :=
+  RingHom.toAlgebra <| AlgHom.toRingHom <|
+    Algebra.TensorProduct.map (IsScalarTower.toAlgHom R A B) (AlgHom.id R S)
+
+lemma isDomain_iff_isReduced_and_irreducibleSpace {R : Type*} [CommRing R] :
+    IsDomain R ↔ IsReduced R ∧ IrreducibleSpace (PrimeSpectrum R) :=
+  sorry
+
 @[stacks 00I7 "For algebraically closed fields."]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed [IsAlgClosed k] {S : Type*}
     [CommRing S] [Algebra k S] (hR : IrreducibleSpace (PrimeSpectrum R))
     (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
+  -- use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux`
+  -- to replace `R` and `S` by their reductions use
+  -- `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux`
+  -- and `PrimeSpectrum.isClosedEmbedding_comap_of_surjective`
+  -- then use `isDomain_iff_isReduced_and_irreducibleSpace`
+  -- and `Algebra.IsGeometricallyReduced.isReduced_tensorProduct`
   sorry
 
 @[stacks 00I7]
@@ -110,6 +135,7 @@ lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isSepClosed [IsSepClosed k
     [CommRing S] [Algebra k S] (hR : IrreducibleSpace (PrimeSpectrum R))
     (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
   -- use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed`
+  -- Bryan
   sorry
 
 lemma PrimeSpectrum.irreducibleSpace_of_faithfullyFlat {S : Type*} [CommRing S] [Algebra R S]
@@ -119,6 +145,7 @@ lemma PrimeSpectrum.irreducibleSpace_of_faithfullyFlat {S : Type*} [CommRing S] 
   use `PrimeSpectrum.specComap_surjective_of_faithfullyFlat`
   and `Function.Surjective.preirreducibleSpace`
   -/
+  -- Timo
   sorry
 
 lemma PrimeSpectrum.irreducibleSpace_of_isScalarTower (K L : Type*) [Field K] [Field L]
@@ -126,4 +153,5 @@ lemma PrimeSpectrum.irreducibleSpace_of_isScalarTower (K L : Type*) [Field K] [F
     [IrreducibleSpace (PrimeSpectrum (L ⊗[k] R))] :
     IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) :=
   -- uses `PrimeSpectrum.irreducibleSpace_of_faithfullyFlat`
+  -- Timo
   sorry
