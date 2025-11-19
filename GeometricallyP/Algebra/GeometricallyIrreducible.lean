@@ -96,10 +96,6 @@ theorem irreducibleSpace [Algebra.GeometricallyIrreducible k R]
 theorem of_irreducibleSpace_of_isSepClosed (Ω : Type*) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
     (H : IrreducibleSpace (PrimeSpectrum (Ω ⊗[k] R))) :
     Algebra.GeometricallyIrreducible k R := by
-    rw [iff_irreducibleSpace_separableClosure]
-    have : Algebra (SeparableClosure k) Ω := by sorry
-    -- exact PrimeSpectrum.irreducibleSpace_of_isScalarTower (SeparableClosure k) Ω
-    sorry
   /-
   use `iff_irreducibleSpace_separableClosure` and `PrimeSpectrum.irreducibleSpace_of_isScalarTower`
   -/
