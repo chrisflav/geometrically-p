@@ -114,10 +114,47 @@ lemma PrimeSpectrum.irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed
   (irreducibleSpace_iff_of_ringEquiv (Algebra.TensorProduct.lid k R).symm.toRingEquiv).trans
     (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosure k R k L)
 
+@[stacks 00I7 "For domains of finite type over `k`."]
+private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [IsAlgClosed k]
+    {S : Type*} [CommRing S] [Algebra k S] [Algebra.FiniteType k S]
+    [IsDomain S] [Algebra.FiniteType k R] [IsDomain R]
+    (hR : IrreducibleSpace (PrimeSpectrum R))
+    (hS : IrreducibleSpace (PrimeSpectrum S)) :
+    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
+  sorry
+
+/-- A ring is a domain if and only if it is reduced and its prime spectrum
+is irreducible. -/
+lemma isDomain_iff_isReduced_and_irreducibleSpace {R : Type*} [CommRing R] :
+    IsDomain R ↔ IsReduced R ∧ IrreducibleSpace (PrimeSpectrum R) :=
+  sorry
+
+/-- If `Spec R` is irreducible and `S` is an `R`-algebra such that the induced
+map `Spec S → Spec R` is open and for a dense set of primes `p` of `R`, the fibre
+`Spec (S ⊗[R] κ(p))` is irreducible, then `Spec S` is irreducible. -/
+lemma PrimeSpectrum.irreducibleSpace_of_isOpenMap_of_dense
+    {R S : Type*} [CommRing R] [CommRing S] [Algebra R S]
+    [IrreducibleSpace (PrimeSpectrum R)]
+    (hf : IsOpenMap (PrimeSpectrum.comap <| algebraMap R S))
+    {s : Set (PrimeSpectrum R)} (hs : Dense s)
+    (H : ∀ p ∈ s,
+      IrreducibleSpace (PrimeSpectrum <| S ⊗[R] p.asIdeal.ResidueField)) :
+    IrreducibleSpace (PrimeSpectrum S) :=
+  -- use ...
+  sorry
+
 @[stacks 00I7 "For algebraically closed fields."]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed [IsAlgClosed k] {S : Type*}
     [CommRing S] [Algebra k S] (hR : IrreducibleSpace (PrimeSpectrum R))
     (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
+  -- Use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux`.
+  -- To replace `R` and `S` by their reductions use
+  -- `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux`
+  -- and `PrimeSpectrum.isClosedEmbedding_comap_of_surjective`.
+  -- Then use `isDomain_iff_isReduced_and_irreducibleSpace`
+  -- and `Algebra.IsGeometricallyReduced.isReduced_tensorProduct`.
+  -- Finally, use `isDomain_tensorProduct_of_forall_isDomain_of_FG`
+  -- to reduce to `Algebra.FiniteType k R` and `Algebra.FiniteType k S`
   sorry
 
 @[stacks 00I7]
@@ -143,6 +180,7 @@ lemma PrimeSpectrum.irreducibleSpace_of_faithfullyFlat {S : Type*} [CommRing S] 
   use `PrimeSpectrum.specComap_surjective_of_faithfullyFlat`
   and `Function.Surjective.preirreducibleSpace`
   -/
+  -- Timo
   sorry
 
 lemma PrimeSpectrum.irreducibleSpace_of_isScalarTower (K L : Type*) [Field K] [Field L]
@@ -150,4 +188,5 @@ lemma PrimeSpectrum.irreducibleSpace_of_isScalarTower (K L : Type*) [Field K] [F
     [IrreducibleSpace (PrimeSpectrum (L ⊗[k] R))] :
     IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) :=
   -- uses `PrimeSpectrum.irreducibleSpace_of_faithfullyFlat`
+  -- Timo
   sorry
