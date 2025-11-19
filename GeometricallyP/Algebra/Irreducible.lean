@@ -99,6 +99,16 @@ lemma PrimeSpectrum.irreducibleSpace_iff_of_isAlgClosure_of_isSepClosure
   obtain ⟨inst, _, h⟩ := exists_algebra_isPurelyInseparable_of_isSepClosure_of_isAlgClosure k K L
   rw [PrimeSpectrum.irreducibleSpace_iff_of_isPurelyInseparable k R K L]
 
+lemma PrimeSpectrum.irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed
+    (k R : Type*) [CommRing R] [Field k] [Algebra k R]
+    [IsSepClosed k]
+    (L : Type*) [Field L] [Algebra k L] [IsAlgClosure k L] :
+    IrreducibleSpace (PrimeSpectrum R) ↔ IrreducibleSpace (PrimeSpectrum (L ⊗[k] R)) := by
+  refine Iff.trans ?_ (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosure k R k _)
+  #check Algebra.TensorProduct.lid k R
+  
+  sorry
+
 @[stacks 00I7 "For algebraically closed fields."]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed [IsAlgClosed k] {S : Type*}
     [CommRing S] [Algebra k S] (hR : IrreducibleSpace (PrimeSpectrum R))
@@ -108,8 +118,16 @@ lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed [IsAlgClosed k
 @[stacks 00I7]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isSepClosed [IsSepClosed k] {S : Type*}
     [CommRing S] [Algebra k S] (hR : IrreducibleSpace (PrimeSpectrum R))
-    (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
+    (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) := by
   -- use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed`
+  letI kbar := AlgebraicClosure k
+  have hR' : IrreducibleSpace (PrimeSpectrum (kbar ⊗[k] R)) :=
+    (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed k R _).mp hR
+  have hS' : IrreducibleSpace (PrimeSpectrum (kbar ⊗[k] S)) :=
+    (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed k S _).mp hS
+  have hRS' := irreducibleSpace_tensorProduct_of_isAlgClosed (k := kbar) hR' hS'
+  apply (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed k (R ⊗[k] S) kbar).mpr
+  #check Algebra.TensorProduct.tensorTensorTensorComm k k kbar kbar kbar R kbar S
   sorry
 
 lemma PrimeSpectrum.irreducibleSpace_of_faithfullyFlat {S : Type*} [CommRing S] [Algebra R S]
