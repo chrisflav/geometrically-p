@@ -8,6 +8,8 @@ import GeometricallyP.Mathlib.Topology.Homeomorph.Lemmas
 import GeometricallyP.Mathlib.FieldTheory.PurelyInseparable.Basic
 import Mathlib.RingTheory.Flat.TorsionFree
 import Mathlib.RingTheory.Spectrum.Prime.Homeomorph
+import Mathlib.RingTheory.Spectrum.Prime.Jacobson
+import GeometricallyP.Mathlib.RingTheory.Jacobson.Ring
 
 /-!
 # Irreducibility of prime spectrum
@@ -99,15 +101,6 @@ lemma PrimeSpectrum.irreducibleSpace_iff_of_isAlgClosure_of_isSepClosure
   obtain ⟨inst, _, h⟩ := exists_algebra_isPurelyInseparable_of_isSepClosure_of_isAlgClosure k K L
   rw [PrimeSpectrum.irreducibleSpace_iff_of_isPurelyInseparable k R K L]
 
-@[stacks 00I7 "For domains of finite type over `k`."]
-private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [IsAlgClosed k]
-    {S : Type*} [CommRing S] [Algebra k S] [Algebra.FiniteType k S]
-    [IsDomain S] [Algebra.FiniteType k R] [IsDomain R]
-    (hR : IrreducibleSpace (PrimeSpectrum R))
-    (hS : IrreducibleSpace (PrimeSpectrum S)) :
-    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
-  sorry
-
 /-- A ring is a domain if and only if it is reduced and its prime spectrum
 is irreducible. -/
 lemma isDomain_iff_isReduced_and_irreducibleSpace {R : Type*} [CommRing R] :
@@ -123,9 +116,30 @@ lemma PrimeSpectrum.irreducibleSpace_of_isOpenMap_of_dense
     (hf : IsOpenMap (PrimeSpectrum.comap <| algebraMap R S))
     {s : Set (PrimeSpectrum R)} (hs : Dense s)
     (H : ∀ p ∈ s,
-      IrreducibleSpace (PrimeSpectrum <| S ⊗[R] p.asIdeal.ResidueField)) :
-    IrreducibleSpace (PrimeSpectrum S) :=
-  -- use ...
+      IsIrreducible ((⇑(comap (algebraMap R S)) ⁻¹' {p}))) :
+    IsPreirreducible (Set.univ : Set (PrimeSpectrum S)) := by
+  have h :
+      Set.univ
+      ⊆ closure (Set.univ ∩ {x | IsPreirreducible (⇑(comap (algebraMap R S)) ⁻¹' {x})}) := by
+    simp only [Set.univ_inter, Set.univ_subset_iff]
+    refine Dense.closure_eq ?_
+    apply Dense.mono (hd := hs)
+    exact fun p hp ↦ (H p hp).isPreirreducible
+  simpa using
+    (IrreducibleSpace.isIrreducible_univ
+      (PrimeSpectrum R)).isPreirreducible.preimage_of_dense_isPreirreducible_fiber
+      (hf' := hf) (hf'' := h)
+
+@[stacks 00I7 "For domains of finite type over `k`."]
+private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [IsAlgClosed k]
+    {S : Type*} [CommRing S] [Algebra k S] [Algebra.FiniteType k S]
+    [IsDomain S] [Algebra.FiniteType k R] [IsDomain R]
+    (hR : IrreducibleSpace (PrimeSpectrum R))
+    (hS : IrreducibleSpace (PrimeSpectrum S)) :
+    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) := by
+  have : IsJacobsonRing R := isJacobsonRing_of_finiteType (A := k)
+  have : closure (closedPoints (PrimeSpectrum R)) = Set.univ := closure_closedPoints
+  #check irreducibleSpace_of_isOpenMap_of_dense (S := R ⊗[k] S)
   sorry
 
 @[stacks 00I7 "For algebraically closed fields."]
