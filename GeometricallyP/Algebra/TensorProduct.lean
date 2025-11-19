@@ -150,3 +150,14 @@ lemma eq_zero_or_eq_one_of_isIdempotentElem_of_forall_isSeparable
     e = 0 ∨ e = 1 := by
   -- argue as in `subsingleton_minimalPrimes_of_isSeparable`
   sorry
+
+/-- If for every finitely generated subalgebra `S'` of `S`
+and finitely generated subalgebra `T'` of `T`, the tensor product
+`S' ⊗[R] T'` is a domain, then also `S ⊗[R] T` is a domain. -/
+@[stacks 00I3 "(2) in contrapositive form"]
+lemma isDomain_tensorProduct_of_forall_isDomain_of_FG
+    {R S T : Type*} [CommRing R] [CommRing S] [CommRing T] [Algebra R S] [Algebra R T]
+    (H : ∀ (S' : Subalgebra R S) (T' : Subalgebra R T),
+      S'.FG → T'.FG → IsDomain (S' ⊗[R] T')) :
+    IsDomain (S ⊗[R] T) :=
+  sorry
