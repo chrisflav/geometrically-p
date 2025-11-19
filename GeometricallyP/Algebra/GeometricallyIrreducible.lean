@@ -35,7 +35,8 @@ the above. The reason for choosing this definition is that it does not quantify 
 -/
 @[stacks 037L, mk_iff]
 class GeometricallyIrreducible (k R : Type*) [Field k] [CommRing R] [Algebra k R] : Prop where
-  irreducibleSpace_tensorProduct : IrreducibleSpace (PrimeSpectrum (AlgebraicClosure k ⊗[k] R))
+  irreducibleSpace_tensorProduct :
+    IrreducibleSpace (PrimeSpectrum (AlgebraicClosure k ⊗[k] R))
 
 namespace GeometricallyIrreducible
 
@@ -58,6 +59,7 @@ theorem of_forall_irreducibleSpace_of_isSeparable
   /-
   uses `PrimeSpectrum.irreducibleSpace_of_isSeparable` and `iff_irreducibleSpace_separableClosure`
   -/
+  -- Cheni
   sorry
 
 /-- If `R` is geometrically irreducible over `k`, for every field extension `K` of `k`, the
@@ -67,17 +69,18 @@ theorem irreducibleSpace [Algebra.GeometricallyIrreducible k R]
     (K : Type*) [Field K] [Algebra k K] :
     IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) :=
   -- uses `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed`
+  -- Cheni
   sorry
 
 /-- If `Ω` is a separably closed extension of `k` such that `Spec (Ω ⊗[k] R)` is irreducible,
 `R` is geometrically irreducible over `k`. -/
 theorem of_irreducibleSpace_of_isSepClosed (Ω : Type*) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
     (H : IrreducibleSpace (PrimeSpectrum (Ω ⊗[k] R))) :
-    Algebra.GeometricallyIrreducible k R :=
-  /-
-  use `iff_irreducibleSpace_separableClosure` and `PrimeSpectrum.irreducibleSpace_of_isScalarTower`
-  -/
-  sorry
+    Algebra.GeometricallyIrreducible k R := by
+  rw [iff_irreducibleSpace_separableClosure]
+  let h : Algebra (SeparableClosure k) Ω :=
+    (IsSepClosed.lift : (SeparableClosure k →ₐ[k] Ω)).toAlgebra
+  apply PrimeSpectrum.irreducibleSpace_of_isScalarTower (SeparableClosure k) Ω
 
 /-- If `K` is geometrically irreducible over `k` and `R` is geometrically irreducible over `K`,
 then `R` is geometrically irreducible over `k`. -/
@@ -85,6 +88,7 @@ then `R` is geometrically irreducible over `k`. -/
 lemma trans (K : Type*) [Field K] [Algebra k K] [Algebra K R] [IsScalarTower k K R]
     [GeometricallyIrreducible k K] [GeometricallyIrreducible K R] :
     GeometricallyIrreducible k R :=
+  -- Yannis
   sorry
 
 /-- Let `K` over k` be a field extension. Then `K` is geometrically irreducible over `k`

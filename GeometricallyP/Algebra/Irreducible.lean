@@ -39,6 +39,13 @@ lemma PrimeSpectrum.irreducibleSpace_iff {R : Type*} [CommSemiring R] :
   simp only [OrderDual, Set.subsingleton_coe] at h1
   rw [h1]
 
+lemma PrimeSpectrum.irreducibleSpace_iff_of_ringEquiv
+    {R S : Type*} [CommSemiring R] [CommSemiring S]
+    (e : R ≃+* S) :
+    IrreducibleSpace (PrimeSpectrum R) ↔ IrreducibleSpace (PrimeSpectrum S) :=
+  ⟨fun _ ↦ (PrimeSpectrum.homeomorphOfRingEquiv e).isHomeomorph.irreducibleSpace,
+  fun _ ↦ (PrimeSpectrum.homeomorphOfRingEquiv e.symm).isHomeomorph.irreducibleSpace⟩
+
 lemma Ideal.IsPrime.nontrivial {R : Type*} [Semiring R]
     {I : Ideal R} (hI : I.IsPrime) : Nontrivial R :=
   nontrivial_of_ne 1 0 (fun h ↦ hI.1 <| (eq_top_iff_one I).mpr (h ▸ I.zero_mem))
@@ -99,18 +106,72 @@ lemma PrimeSpectrum.irreducibleSpace_iff_of_isAlgClosure_of_isSepClosure
   obtain ⟨inst, _, h⟩ := exists_algebra_isPurelyInseparable_of_isSepClosure_of_isAlgClosure k K L
   rw [PrimeSpectrum.irreducibleSpace_iff_of_isPurelyInseparable k R K L]
 
+lemma PrimeSpectrum.irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed
+    (k R : Type*) [CommRing R] [Field k] [Algebra k R]
+    [IsSepClosed k]
+    (L : Type*) [Field L] [Algebra k L] [IsAlgClosure k L] :
+    IrreducibleSpace (PrimeSpectrum R) ↔ IrreducibleSpace (PrimeSpectrum (L ⊗[k] R)) :=
+  (irreducibleSpace_iff_of_ringEquiv (Algebra.TensorProduct.lid k R).symm.toRingEquiv).trans
+    (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosure k R k L)
+
+@[stacks 00I7 "For domains of finite type over `k`."]
+private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [IsAlgClosed k]
+    {S : Type*} [CommRing S] [Algebra k S] [Algebra.FiniteType k S]
+    [IsDomain S] [Algebra.FiniteType k R] [IsDomain R]
+    (hR : IrreducibleSpace (PrimeSpectrum R))
+    (hS : IrreducibleSpace (PrimeSpectrum S)) :
+    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
+  sorry
+
+/-- A ring is a domain if and only if it is reduced and its prime spectrum
+is irreducible. -/
+lemma isDomain_iff_isReduced_and_irreducibleSpace {R : Type*} [CommRing R] :
+    IsDomain R ↔ IsReduced R ∧ IrreducibleSpace (PrimeSpectrum R) :=
+  sorry
+
+/-- If `Spec R` is irreducible and `S` is an `R`-algebra such that the induced
+map `Spec S → Spec R` is open and for a dense set of primes `p` of `R`, the fibre
+`Spec (S ⊗[R] κ(p))` is irreducible, then `Spec S` is irreducible. -/
+lemma PrimeSpectrum.irreducibleSpace_of_isOpenMap_of_dense
+    {R S : Type*} [CommRing R] [CommRing S] [Algebra R S]
+    [IrreducibleSpace (PrimeSpectrum R)]
+    (hf : IsOpenMap (PrimeSpectrum.comap <| algebraMap R S))
+    {s : Set (PrimeSpectrum R)} (hs : Dense s)
+    (H : ∀ p ∈ s,
+      IrreducibleSpace (PrimeSpectrum <| S ⊗[R] p.asIdeal.ResidueField)) :
+    IrreducibleSpace (PrimeSpectrum S) :=
+  -- use ...
+  sorry
+
 @[stacks 00I7 "For algebraically closed fields."]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed [IsAlgClosed k] {S : Type*}
     [CommRing S] [Algebra k S] (hR : IrreducibleSpace (PrimeSpectrum R))
     (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
+  -- Use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux`.
+  -- To replace `R` and `S` by their reductions use
+  -- `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux`
+  -- and `PrimeSpectrum.isClosedEmbedding_comap_of_surjective`.
+  -- Then use `isDomain_iff_isReduced_and_irreducibleSpace`
+  -- and `Algebra.IsGeometricallyReduced.isReduced_tensorProduct`.
+  -- Finally, use `isDomain_tensorProduct_of_forall_isDomain_of_FG`
+  -- to reduce to `Algebra.FiniteType k R` and `Algebra.FiniteType k S`
   sorry
 
 @[stacks 00I7]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isSepClosed [IsSepClosed k] {S : Type*}
     [CommRing S] [Algebra k S] (hR : IrreducibleSpace (PrimeSpectrum R))
-    (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
+    (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) := by
   -- use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed`
-  sorry
+  letI kbar := AlgebraicClosure k
+  have hR' : IrreducibleSpace (PrimeSpectrum (kbar ⊗[k] R)) :=
+    (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed k R _).mp hR
+  have hS' : IrreducibleSpace (PrimeSpectrum (kbar ⊗[k] S)) :=
+    (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed k S _).mp hS
+  have hRS' := irreducibleSpace_tensorProduct_of_isAlgClosed (k := kbar) hR' hS'
+  apply (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed k (R ⊗[k] S) kbar).mpr
+  let e := (Algebra.TensorProduct.tensorTensorTensorComm k k kbar kbar kbar R kbar S).trans
+    (Algebra.TensorProduct.congr (Algebra.TensorProduct.lid kbar kbar) AlgEquiv.refl)
+  exact (PrimeSpectrum.homeomorphOfRingEquiv e.toRingEquiv).isHomeomorph.irreducibleSpace
 
 lemma PrimeSpectrum.irreducibleSpace_of_faithfullyFlat (S : Type*) [CommRing S] [Algebra R S]
     [Module.FaithfullyFlat R S] [IrreducibleSpace (PrimeSpectrum S)] :
