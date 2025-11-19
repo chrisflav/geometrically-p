@@ -6,6 +6,7 @@ Authors: Christian Merten
 import GeometricallyP.Geometry.Basic
 import GeometricallyP.Algebra.GeometricallyIrreducible
 import GeometricallyP.Mathlib.Topology.Irreducible
+import GeometricallyP.Mathlib.AlgebraicGeometry.Scheme
 import Mathlib.AlgebraicGeometry.Morphisms.UniversallyOpen
 
 /-!
@@ -20,13 +21,6 @@ universe u
 open CategoryTheory Limits
 
 namespace AlgebraicGeometry
-
-/-- Every morphism `X ⟶ Spec (.of R)` induces an `R`-algebra structure on
-`Γ(X, U)` for every `U`. -/
-noncomputable def algebraOfHomSpec {R : Type u} [CommRing R] {X : Scheme.{u}}
-    (s : X ⟶ Spec (.of R)) (U : X.Opens) : Algebra R Γ(X, U) :=
-  ((s.appLE ⊤ U (by simp)).hom.comp
-    (Scheme.ΓSpecIso <| .of R).commRingCatIsoToRingEquiv.symm.toRingHom).toAlgebra
 
 /-- A scheme `X` over a field `k` is geometrically irreducible if any base change `X_K`
 is irreducible for a field extension `K` of `k`. -/
@@ -92,6 +86,18 @@ theorem iff_irreducibleSpace_separableClosure :
     GeometricallyIrreducible s ↔
       IrreducibleSpace ↑(pullback s (Spec (.of <| SeparableClosure k) ↘ Spec (.of k))) :=
   sorry
+
+/-- If `X` is geometrically irreducible over `k` and `Y` is any `k`-scheme, then
+`X ×[k] Y ⟶ Y` induces an order preserving bijection between irreducible components. -/
+@[stacks 0364]
+def irreducibleComponentsOrderIsoPullback [GeometricallyIrreducible s] {Y : Scheme.{u}}
+    (t : Y ⟶ Spec (.of k)) :
+    irreducibleComponents Y ≃o irreducibleComponents ↑(pullback s t) :=
+  irreducibleComponentsEquivOfIsPreirreducibleFiber _ (pullback.snd s t).continuous
+    -- use `AlgebraicGeometry.universallyOpen_Spec_field`
+    sorry
+    sorry
+    sorry
 
 end GeometricallyIrreducible
 

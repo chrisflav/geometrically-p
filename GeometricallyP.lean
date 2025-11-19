@@ -8,8 +8,10 @@ import GeometricallyP.Geometry.GeometricallyIrreducible
 import GeometricallyP.Mathlib.Algebra.CharP.Lemmas
 import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UnderlyingMap
 import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UniversallyOpen
+import GeometricallyP.Mathlib.AlgebraicGeometry.Scheme
 import GeometricallyP.Mathlib.CategoryTheory.ObjectProperty.Stability
 import GeometricallyP.Mathlib.FieldTheory.PurelyInseparable.Basic
+import GeometricallyP.Mathlib.RingTheory.Nilpotent.GeometricallyReduced
 import GeometricallyP.Mathlib.Topology.Homeomorph.Lemmas
 import GeometricallyP.Mathlib.Topology.Irreducible
 import GeometricallyP.SchemeDemo

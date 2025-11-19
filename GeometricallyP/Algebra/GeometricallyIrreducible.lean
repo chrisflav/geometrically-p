@@ -35,7 +35,8 @@ the above. The reason for choosing this definition is that it does not quantify 
 -/
 @[stacks 037L, mk_iff]
 class GeometricallyIrreducible (k R : Type*) [Field k] [CommRing R] [Algebra k R] : Prop where
-  irreducibleSpace_tensorProduct : IrreducibleSpace (PrimeSpectrum (AlgebraicClosure k ⊗[k] R))
+  irreducibleSpace_tensorProduct :
+    IrreducibleSpace (PrimeSpectrum (AlgebraicClosure k ⊗[k] R))
 
 namespace GeometricallyIrreducible
 
@@ -58,6 +59,7 @@ theorem of_forall_irreducibleSpace_of_isSeparable
   /-
   uses `PrimeSpectrum.irreducibleSpace_of_isSeparable` and `iff_irreducibleSpace_separableClosure`
   -/
+  -- Cheni
   sorry
 
 /-- If `R` is geometrically irreducible over `k`, for every field extension `K` of `k`, the
@@ -67,6 +69,7 @@ theorem irreducibleSpace [Algebra.GeometricallyIrreducible k R]
     (K : Type*) [Field K] [Algebra k K] :
     IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) :=
   -- uses `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed`
+  -- Cheni
   sorry
 
 /-- If `Ω` is a separably closed extension of `k` such that `Spec (Ω ⊗[k] R)` is irreducible,
@@ -85,6 +88,7 @@ then `R` is geometrically irreducible over `k`. -/
 lemma trans (K : Type*) [Field K] [Algebra k K] [Algebra K R] [IsScalarTower k K R]
     [GeometricallyIrreducible k K] [GeometricallyIrreducible K R] :
     GeometricallyIrreducible k R :=
+  -- Yannis
   sorry
 
 /-- Let `K` over k` be a field extension. Then `K` is geometrically irreducible over `k`
