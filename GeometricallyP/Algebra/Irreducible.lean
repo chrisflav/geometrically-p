@@ -9,7 +9,6 @@ import GeometricallyP.Mathlib.FieldTheory.PurelyInseparable.Basic
 import Mathlib.RingTheory.Flat.TorsionFree
 import Mathlib.RingTheory.Spectrum.Prime.Homeomorph
 import Mathlib.RingTheory.Spectrum.Prime.Jacobson
-import GeometricallyP.Mathlib.RingTheory.Jacobson.Ring
 
 /-!
 # Irreducibility of prime spectrum
@@ -136,16 +135,20 @@ private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [I
     [IsDomain S] [Algebra.FiniteType k R] [IsDomain R]
     (hR : IrreducibleSpace (PrimeSpectrum R))
     (hS : IrreducibleSpace (PrimeSpectrum S)) :
-    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) := by
-  have : IsJacobsonRing R := isJacobsonRing_of_finiteType (A := k)
-  have : closure (closedPoints (PrimeSpectrum R)) = Set.univ := closure_closedPoints
-  have h := (IrreducibleSpace.isIrreducible_univ
-    (PrimeSpectrum R)).isPreirreducible.preimage_of_dense_isPreirreducible_fiber
-    (X := PrimeSpectrum (R ⊗[k] S))
-    (f := comap <| (Algebra.TensorProduct.includeLeft (R := k) (A := R) (S := k)).toRingHom)
-
-  #check irreducibleSpace_of_isOpenMap_of_dense (S := R ⊗[k] S)
-  sorry
+    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) where
+  isPreirreducible_univ := by
+    have : IsJacobsonRing R := isJacobsonRing_of_finiteType (A := k)
+    have : closure (closedPoints (PrimeSpectrum R)) = Set.univ := closure_closedPoints
+    have h := (IrreducibleSpace.isIrreducible_univ
+      (PrimeSpectrum R)).isPreirreducible.preimage_of_dense_isPreirreducible_fiber
+      (X := PrimeSpectrum (R ⊗[k] S))
+      (f := comap <| (Algebra.TensorProduct.includeLeft (R := k) (A := R) (S := k)).toRingHom)
+    simp only [AlgHom.toRingHom_eq_coe, Set.univ_inter, Set.univ_subset_iff, Set.preimage_univ] at h
+    apply h
+    · sorry
+    · sorry
+  toNonempty := inferInstance
+  -- #check irreducibleSpace_of_isOpenMap_of_dense (S := R ⊗[k] S)
 
 @[stacks 00I7 "For algebraically closed fields."]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed [IsAlgClosed k] {S : Type*}
