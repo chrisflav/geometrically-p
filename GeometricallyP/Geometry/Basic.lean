@@ -33,6 +33,10 @@ noncomputable instance (R S : Type u) [CommRing R] [CommRing S] [Algebra R S] :
 lemma overHom_spec_self (R : Type u) [CommRing R] :
     Spec (.of R) ↘ Spec (.of R) = 𝟙 _ := Spec.map_id _
 
+lemma overHom_Spec_def (R S : Type u) [CommRing R] [CommRing S] [Algebra R S] :
+    (Spec (.of S)) ↘ (Spec (.of R)) = Spec.map (CommRingCat.ofHom <| algebraMap R S) :=
+  rfl
+
 /-- If `X` is a scheme over `S` and `f : T ⟶ S` is a morphism, the fibre product
 `X ×[S] T` is a scheme over `T`.
 This matches the order in `CategoryTheory.Over.pullback`, but not the tensor product convention. -/
@@ -97,8 +101,16 @@ then also `X_k' ⟶ Spec k'` is geometrically `P`. -/
 lemma of_isPullback [P.IsClosedUnderIsomorphisms] {k' : Type u} [Field k']
     [Algebra k k'] {Y : Scheme.{u}} {fst : Y ⟶ X} {snd : Y ⟶ Spec (.of k')}
     (h : IsPullback fst snd s (Spec (.of k') ↘ Spec (.of k))) [Geometrically P s] :
-    Geometrically P snd :=
-  sorry
+    Geometrically P snd where
+  prop_of_isPullback K _ _ Z := by
+    intro fst' snd' isPullback
+    let : Algebra k K := Algebra.compHom K (algebraMap k k')
+    have : IsPullback (fst' ≫ fst) snd' s ( (Spec (.of K) ↘ Spec (.of k)))  := by
+     convert IsPullback.paste_horiz isPullback h
+     rw [overHom_Spec_def, overHom_Spec_def, overHom_Spec_def]
+     rw [← Spec.map_comp]
+     rfl
+    apply prop_of_isPullback s K Z _ _ this
 
 /--
 Suppose the property `P` is preserved by surjective morphisms (i.e., if `X ⟶ Y` is surjective
