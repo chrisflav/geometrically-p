@@ -59,3 +59,11 @@ lemma Function.Surjective.preirreducibleSpace {X Y : Type*} [TopologicalSpace X]
   isPreirreducible_univ := by
     rw [← hf.range_eq, ← Set.image_univ]
     exact (PreirreducibleSpace.isPreirreducible_univ).image _ hfc.continuousOn
+
+lemma Function.Surjective.irreducibleSpace {X Y : Type*} [TopologicalSpace X]
+    [TopologicalSpace Y] (f : X → Y) (hfc : Continuous f) (hf : Function.Surjective f)
+    [IrreducibleSpace X] : IrreducibleSpace Y where
+  isPreirreducible_univ := by
+    rw [← hf.range_eq, ← Set.image_univ]
+    exact (PreirreducibleSpace.isPreirreducible_univ).image _ hfc.continuousOn
+  toNonempty := Nonempty.map f inferInstance

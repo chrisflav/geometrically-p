@@ -98,6 +98,7 @@ lemma of_isPullback [P.IsClosedUnderIsomorphisms] {k' : Type u} [Field k']
     [Algebra k k'] {Y : Scheme.{u}} {fst : Y ⟶ X} {snd : Y ⟶ Spec (.of k')}
     (h : IsPullback fst snd s (Spec (.of k') ↘ Spec (.of k))) [Geometrically P s] :
     Geometrically P snd :=
+  -- Judith
   sorry
 
 /--
