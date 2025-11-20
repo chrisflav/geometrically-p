@@ -46,11 +46,8 @@ variable {k : Type u} [Field k] {X : Scheme.{u}} (s : X ⟶ Spec (.of k))
 lemma iff_irreducibleSpace_pullback :
     GeometricallyIrreducible s ↔
       ∀ (K : Type u) [Field K] [Algebra k K],
-        IrreducibleSpace ↑(pullback s (Spec (.of K) ↘ _)) := by
-  have : ObjectProperty.IsClosedUnderIsomorphisms
-      fun (X : Scheme) ↦ IrreducibleSpace X :=
-    sorry
-  exact Geometrically.iff_of_isClosedUnderIsomorphisms
+        IrreducibleSpace ↑(pullback s (Spec (.of K) ↘ _)) :=
+  Geometrically.iff_of_isClosedUnderIsomorphisms _
 
 /-- The affine scheme `Spec R` is geometrically irreducible over `k` if and only if
 the `k`-algebra `R` is geometrically irreducible. -/
