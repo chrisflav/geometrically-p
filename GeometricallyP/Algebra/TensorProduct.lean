@@ -4,6 +4,7 @@ import Mathlib.FieldTheory.SeparableDegree
 import Mathlib.RingTheory.Spectrum.Prime.Topology
 import Mathlib.RingTheory.Ideal.GoingDown
 import Mathlib.RingTheory.RingHom.Flat
+import Mathlib.RingTheory.IsAdjoinRoot
 
 /-!
 # Auxiliary results on tensor products

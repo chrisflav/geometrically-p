@@ -173,20 +173,63 @@ lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isSepClosed [IsSepClosed k
     (Algebra.TensorProduct.congr (Algebra.TensorProduct.lid kbar kbar) AlgEquiv.refl)
   exact (PrimeSpectrum.homeomorphOfRingEquiv e.toRingEquiv).isHomeomorph.irreducibleSpace
 
-lemma PrimeSpectrum.irreducibleSpace_of_faithfullyFlat {S : Type*} [CommRing S] [Algebra R S]
+lemma PrimeSpectrum.irreducibleSpace_of_faithfullyFlat (S : Type*) [CommRing S] [Algebra R S]
     [Module.FaithfullyFlat R S] [IrreducibleSpace (PrimeSpectrum S)] :
-    IrreducibleSpace (PrimeSpectrum R) :=
+    IrreducibleSpace (PrimeSpectrum R) := by
   /-
   use `PrimeSpectrum.specComap_surjective_of_faithfullyFlat`
   and `Function.Surjective.preirreducibleSpace`
   -/
-  -- Timo
-  sorry
+  let f := PrimeSpectrum.comap (algebraMap R S)
+  have surj_f : Function.Surjective f := PrimeSpectrum.specComap_surjective_of_faithfullyFlat
+  have : PreirreducibleSpace (PrimeSpectrum R) :=
+    Function.Surjective.preirreducibleSpace f f.continuous surj_f
+  have nonempty : Nonempty (PrimeSpectrum R) := ⟨f (Classical.arbitrary (PrimeSpectrum S))⟩
+  constructor
+  exact nonempty
 
+lemma Module.FaithfullyFlat.of_isBaseChange {R S M N : Type*} [CommRing R] [CommRing S]
+    [Algebra R S] [AddCommGroup M] [AddCommGroup N]
+    [Module R M] [Module S N] [Module R N] [IsScalarTower R S N]
+    {f : M →ₗ[R] N} (hf : IsBaseChange S f) [Module.FaithfullyFlat R M] :
+    Module.FaithfullyFlat S N := by
+  let e := hf.equiv
+  apply Module.FaithfullyFlat.of_linearEquiv _ _ e.symm
+
+attribute [local instance] TensorProduct.rightAlgebra in
 lemma PrimeSpectrum.irreducibleSpace_of_isScalarTower (K L : Type*) [Field K] [Field L]
     [Algebra k K] [Algebra k L] [Algebra K L] [IsScalarTower k K L]
     [IrreducibleSpace (PrimeSpectrum (L ⊗[k] R))] :
-    IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) :=
+    IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) := by
   -- uses `PrimeSpectrum.irreducibleSpace_of_faithfullyFlat`
-  -- Timo
-  sorry
+  let f := Algebra.TensorProduct.map (IsScalarTower.toAlgHom k K L) (AlgHom.id k R)
+  let algebra := RingHom.toAlgebra <| AlgHom.toRingHom <| f
+
+  let g : L →ₐ[K] L ⊗[k] R := IsScalarTower.toAlgHom _ _ _
+  have h : IsScalarTower K (K ⊗[k] R) (L ⊗[k] R) := IsScalarTower.of_algebraMap_eq (congrFun rfl)
+  have : IsBaseChange (K ⊗[k] R) g.toLinearMap := by
+    rw [← Algebra.isPushout_iff]
+    let e' : L ⊗[K] (K ⊗[k] R) ≃ₐ[L] L ⊗[k] R := by
+      apply Algebra.TensorProduct.cancelBaseChange
+    have : IsScalarTower k (K ⊗[k] R) (L ⊗[K] (K ⊗[k] R)) := by
+      apply IsScalarTower.of_algebraMap_eq
+      intro x
+      simp [TensorProduct.right_algebraMap_apply]
+      rw [IsScalarTower.algebraMap_apply k K L x, TensorProduct.tmul_one_eq_one_tmul]
+      simp
+    have : (e'.toAlgHom.restrictScalars k).comp
+        (IsScalarTower.toAlgHom k (K ⊗[k] R) (L ⊗[K] (K ⊗[k] R))) =
+        IsScalarTower.toAlgHom _ _ _ := by
+      ext
+      · simp [e', RingHom.algebraMap_toAlgebra, f, Algebra.smul_def]
+      simp [e', RingHom.algebraMap_toAlgebra, f, Algebra.smul_def]
+    let e : L ⊗[K] (K ⊗[k] R) ≃ₐ[K ⊗[k] R] L ⊗[k] R := by
+      apply AlgEquiv.ofRingEquiv (f := e'.toRingEquiv)
+      intro x
+      exact congr($this x)
+    apply Algebra.IsPushout.of_equiv e
+    ext
+    simp [e, e', Algebra.TensorProduct.one_def]
+  have : Module.FaithfullyFlat (K ⊗[k] R) (L ⊗[k] R) := by
+    apply Module.FaithfullyFlat.of_isBaseChange this
+  apply PrimeSpectrum.irreducibleSpace_of_faithfullyFlat (L ⊗[k] R)

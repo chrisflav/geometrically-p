@@ -28,16 +28,35 @@ abbrev GeometricallyIrreducible {k : Type u} [Field k] {X : Scheme.{u}}
     (s : X ⟶ Spec (.of k)) : Prop :=
   Geometrically (fun X ↦ IrreducibleSpace X) s
 
+instance : ObjectProperty.InheritedFromSource
+    (fun (X : Scheme) ↦ IrreducibleSpace X)
+    @Surjective := by
+  constructor
+  intro X Y f hf hX
+  exact f.surjective.irreducibleSpace _ f.continuous
+
+instance : ObjectProperty.IsClosedUnderIsomorphisms
+      (fun (X : Scheme) ↦ IrreducibleSpace X) :=
+  .of_inheritedFromSource _ @Surjective
+
 namespace GeometricallyIrreducible
 
 variable {k : Type u} [Field k] {X : Scheme.{u}} (s : X ⟶ Spec (.of k))
+
+lemma iff_irreducibleSpace_pullback :
+    GeometricallyIrreducible s ↔
+      ∀ (K : Type u) [Field K] [Algebra k K],
+        IrreducibleSpace ↑(pullback s (Spec (.of K) ↘ _)) :=
+  Geometrically.iff_of_isClosedUnderIsomorphisms _
 
 /-- The affine scheme `Spec R` is geometrically irreducible over `k` if and only if
 the `k`-algebra `R` is geometrically irreducible. -/
 -- Note: this is nontrivial, because the definition of `Algebra.GeometricallyIrreducible` is
 -- quite different.
 lemma iff_spec (R : Type u) [CommRing R] [Algebra k R] :
-    GeometricallyIrreducible (Spec (.of R) ↘ Spec (.of k)) ↔ Algebra.GeometricallyIrreducible k R :=
+    GeometricallyIrreducible (Spec (.of R) ↘ Spec (.of k)) ↔
+      Algebra.GeometricallyIrreducible k R :=
+  -- Timo
   sorry
 
 /-- Every nonempty open subscheme of a geometrically irreducible scheme is geometrically
@@ -46,6 +65,7 @@ irreducible. -/
 lemma of_isOpenImmersion (U : Scheme.{u}) (i : U ⟶ X) [IsOpenImmersion i] [Nonempty U]
     [GeometricallyIrreducible s] :
     GeometricallyIrreducible (i ≫ s) :=
+  -- Alireza
   sorry
 
 /-- If `X` is geometrically irreducible over `k` and `U` is an affine open, `Γ(X, U)` is
