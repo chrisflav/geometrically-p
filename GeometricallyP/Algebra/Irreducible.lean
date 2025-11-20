@@ -108,11 +108,44 @@ private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [I
     IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
   sorry
 
+lemma minimalPrimes_eq_singleton_nilradical {R : Type*} [CommRing R]
+    [IrreducibleSpace (PrimeSpectrum R)] :
+    minimalPrimes R = {nilradical R} := by
+  have : (minimalPrimes R).Nonempty ∧ (minimalPrimes R).Subsingleton := by
+    constructor
+    · have : Nontrivial R := by
+        exact (PrimeSpectrum.irreducibleSpace_iff.mp inferInstance).1
+      have h : (⊥ : Ideal R) ≠ ⊤ := by
+        exact bot_ne_top
+      rw [← Set.nonempty_coe_sort]
+      exact Ideal.nonempty_minimalPrimes h
+    · exact (PrimeSpectrum.irreducibleSpace_iff.mp inferInstance).2
+  rw [← Set.exists_eq_singleton_iff_nonempty_subsingleton] at this
+  obtain ⟨I, hI⟩ := this
+  rw [hI, Set.singleton_eq_singleton_iff, nilradical, Submodule.zero_eq_bot,
+    ← Ideal.sInf_minimalPrimes, ← minimalPrimes, hI]
+  simp
+
 /-- A ring is a domain if and only if it is reduced and its prime spectrum
 is irreducible. -/
 lemma isDomain_iff_isReduced_and_irreducibleSpace {R : Type*} [CommRing R] :
-    IsDomain R ↔ IsReduced R ∧ IrreducibleSpace (PrimeSpectrum R) :=
-  sorry
+    IsDomain R ↔ IsReduced R ∧ IrreducibleSpace (PrimeSpectrum R) := by
+  constructor
+  · intro h
+    constructor
+    · infer_instance
+    exact PrimeSpectrum.irreducibleSpace
+  · intro h
+    obtain ⟨hred, hirr⟩ := h
+    have h1 : (minimalPrimes R) = {(⊥ : Ideal R)} := by
+      rw [minimalPrimes_eq_singleton_nilradical]
+      simp
+    have h_in : (⊥ : Ideal R) ∈ (minimalPrimes R) := by
+      rw [h1]
+      simp
+    have hbp2 :(⊥ : Ideal R).IsPrime := by
+      apply Ideal.minimalPrimes_isPrime (h_in)
+    exact IsDomain.of_bot_isPrime R
 
 /-- If `Spec R` is irreducible and `S` is an `R`-algebra such that the induced
 map `Spec S → Spec R` is open and for a dense set of primes `p` of `R`, the fibre
