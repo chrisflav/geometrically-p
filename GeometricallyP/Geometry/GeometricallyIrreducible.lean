@@ -71,11 +71,12 @@ lemma of_isOpenImmersion (U : Scheme.{u}) (i : U ⟶ X) [IsOpenImmersion i] [Non
 /-- If `X` is geometrically irreducible over `k` and `U` is an affine open, `Γ(X, U)` is
 geometrically irreducible over `k`. -/
 @[stacks 038G "(1) => (2)"]
-lemma geometricallyIrreducible_of_isAffineOpen (U : X.Opens) (hU : IsAffineOpen U)
-    (hU : U.carrier.Nonempty) :
+lemma geometricallyIrreducible_of_isAffineOpen [GeometricallyIrreducible s]
+    (U : X.Opens) (hU : IsAffineOpen U) (hU : U.carrier.Nonempty) :
     letI : Algebra k Γ(X, U) := algebraOfHomSpec s U
     Algebra.GeometricallyIrreducible k Γ(X, U) :=
   -- use `of_isOpenImmersion` to reduce to the affine case
+  -- Cheni
   sorry
 
 /-- If `X` is covered by geometrically irreducible open subschemes with pairwise
@@ -85,6 +86,7 @@ lemma of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
     (hn : ∀ i j, Nonempty ↑(pullback (𝒰.f i) (𝒰.f j)))
     (h : ∀ i, GeometricallyIrreducible (𝒰.f i ≫ s)) :
     GeometricallyIrreducible s :=
+  -- Bryan
   sorry
 
 /-- Being geometrically irreducible can be checked on finite extensions. -/
@@ -94,10 +96,11 @@ lemma of_finite
     GeometricallyIrreducible s :=
   sorry
 
-/-- Being geometrically irreducible can be checked on a separable closure. -/
-lemma of_isSepClosure (K : Type u) [Field K] [Algebra k K] [IsSepClosure k K]
-    [IrreducibleSpace ↑(pullback s (Spec (.of K) ↘ Spec (.of k)))] :
+/-- Being geometrically irreducible can be checked on a separably closed field. -/
+lemma of_isSepClosed (Ω : Type u) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
+    [IrreducibleSpace ↑(pullback s (Spec (.of Ω) ↘ Spec (.of k)))] :
     GeometricallyIrreducible s :=
+  -- Yannis
   sorry
 
 /-- `X` is geometrically irreducible over `s` if and only if `X_K` is irreducible
