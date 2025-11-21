@@ -71,12 +71,41 @@ lemma of_isOpenImmersion (U : Scheme.{u}) (i : U ⟶ X) [IsOpenImmersion i] [Non
 /-- If `X` is geometrically irreducible over `k` and `U` is an affine open, `Γ(X, U)` is
 geometrically irreducible over `k`. -/
 @[stacks 038G "(1) => (2)"]
-lemma geometricallyIrreducible_of_isAffineOpen (U : X.Opens) (hU : IsAffineOpen U)
-    (hU : U.carrier.Nonempty) :
+lemma geometricallyIrreducible_of_isAffineOpen [GeometricallyIrreducible s]
+    (U : X.Opens) (hU : IsAffineOpen U)
+    (hU' : U.carrier.Nonempty) :
     letI : Algebra k Γ(X, U) := algebraOfHomSpec s U
-    Algebra.GeometricallyIrreducible k Γ(X, U) :=
-  -- use `of_isOpenImmersion` to reduce to the affine case
-  sorry
+    Algebra.GeometricallyIrreducible k Γ(X, U) := by
+      letI : Algebra k Γ(X, U) := algebraOfHomSpec s U
+      let : Nonempty (Spec Γ(X, U)) :=
+        Nonempty.intro (hU.isoSpec.hom (Classical.choice hU'.to_subtype))
+
+      let a : hU.fromSpec ≫ X.toSpecΓ = Spec.map (X.presheaf.map (homOfLE le_top).op) :=
+        AlgebraicGeometry.IsAffineOpen.fromSpec_toSpecΓ hU
+      let b : s ≫ (Spec (.of k)).toSpecΓ = X.toSpecΓ ≫ Spec.map s.appTop :=
+        Scheme.toSpecΓ_naturality s
+      have c : hU.fromSpec ≫ s ≫ (Spec (.of k)).toSpecΓ
+        = Spec.map (X.presheaf.map (homOfLE le_top).op) ≫ Spec.map s.appTop := by
+          rw [b, ← Category.assoc, a]
+      have d : (Spec (.of k)).toSpecΓ ≫ Spec.map ((Scheme.ΓSpecIso <| .of k).inv)
+        = 𝟙 (Spec (.of k)) := by simp
+      have : hU.fromSpec ≫ s = Spec.map (CommRingCat.ofHom (algebraMap k Γ(X, U))):= by
+        calc hU.fromSpec ≫ s =
+          hU.fromSpec ≫ s ≫ (Spec (.of k)).toSpecΓ ≫ Spec.map ((Scheme.ΓSpecIso <| .of k).inv) :=
+            (by rw [d, Category.comp_id])
+          _ = Spec.map (X.presheaf.map (homOfLE le_top).op) ≫ Spec.map s.appTop
+            ≫ Spec.map ((Scheme.ΓSpecIso <| .of k).inv) := (by
+            rw [← Category.assoc s (Spec (.of k)).toSpecΓ
+              (Spec.map ((Scheme.ΓSpecIso <| .of k).inv)),
+              ← Category.assoc hU.fromSpec _ _, c];rfl)
+          _ = Spec.map (CommRingCat.ofHom (algebraMap k Γ(X, U))) := (by
+            rw [← Spec.map_comp, ← Spec.map_comp];congr)
+
+      rw [← iff_spec]
+      let irred : GeometricallyIrreducible (hU.fromSpec ≫ s) :=
+        of_isOpenImmersion s (Spec Γ(X, U)) hU.fromSpec
+      simp [this] at irred
+      exact irred
 
 /-- If `X` is covered by geometrically irreducible open subschemes with pairwise
 non-empty intersections, `X` is geometrically irreducible. -/
