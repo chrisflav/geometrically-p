@@ -80,17 +80,167 @@ theorem of_irreducibleSpace_of_isSepClosed (Ω : Type*) [Field Ω] [Algebra k Ω
   -/
   sorry
 
+--this should be somewhere right?
+lemma IsFieldOfIsoField (K L : Type*) [Field K] [Ring L] (e : K ≃+* L) : IsField L := by
+  constructor
+  · use e.toFun 0, e.toFun 1
+    intro h
+    have : (0:K)= (1:K) := by
+      rw [← e.left_inv 0, h, e.left_inv 1]
+    grind-- a bit overkill right? i could'nt find better
+  · intro x y
+    rw [← e.right_inv x, ← e.right_inv y, ← e.map_mul', mul_comm, e.map_mul']
+  · intro a ha
+    use e.toFun ((e.invFun a) ⁻¹)
+    slice_lhs 1 1 => rw [← e.right_inv a]
+    rw [ ← e.map_mul']
+    have : e.invFun a ≠ 0 := by
+      suffices e.symm a ≠ 0 by
+        exact this
+      apply  (RingEquiv.map_ne_zero_iff _).2 ha
+    rw [Field.mul_inv_cancel _ this, ← RingEquiv.map_one e]
+    rfl
+
+noncomputable def foo {R : Type*} (S:Type*) [CommRing R] [CommRing S]
+    [Algebra R S] (p : Polynomial R) :
+    AdjoinRoot (p.map (algebraMap R S)) ≃ₐ[S] S ⊗[R] AdjoinRoot p :=
+  AlgEquiv.ofAlgHom
+    (AdjoinRoot.liftAlgHom _ TensorProduct.includeLeft ( 1 ⊗ₜ AdjoinRoot.root p) (by
+    --let motive : Polynomial R → Prop :=
+      --fun p => (Polynomial.eval₂ (TensorProduct.includeLeft) (1 ⊗ₜ[R] AdjoinRoot.root p) (Polynomial.map (algebraMap R S) p) = 0)
+
+
+    --apply Polynomial.induction_on  p
+
+
+
+
+    --rw [Polynomial.eval₂_def]
+    --simp
+
+
+    sorry))
+    (Algebra.TensorProduct.lift (AdjoinRoot.ofAlgHom S (Polynomial.map (algebraMap R S) p)) (AdjoinRoot.liftAlgHom p ⟨ by apply algebraMap, by simp ⟩ (AdjoinRoot.root (Polynomial.map (algebraMap R S) p)
+      ) (by
+
+
+      simp
+      let motive := fun p => Polynomial.eval₂ (algebraMap R (AdjoinRoot (Polynomial.map (algebraMap R S) p))) (AdjoinRoot.root (Polynomial.map (algebraMap R S) p)) p = 0
+
+
+      apply @Polynomial.induction_on _ _ motive
+
+      · intro a
+        simp [motive]
+
+        sorry
+      · intro p q hp hq
+        simp [motive]
+
+        sorry
+      · sorry))
+    (by
+      intro _ _
+      apply Commute.all))
+    (by aesop)
+    (by aesop)
+
 /-- If K/k is a finte separable extension and L a field over k then L ⊗[k] K is a field -/
-lemma FinSepExTensorIsField (k K L : Type*) [Field k] [Field K] [Field L] [Algebra k K] [Algebra k L] [Module.Finite k K] [Algebra.IsSeparable k K] : IsField (L ⊗[k] K) := by
-  --#check k⟮α⟯
-  let a := (Field.exists_primitive_element k K).choose
-  let ha  : IntermediateField.adjoin k {a} = ⊤ := (Field.exists_primitive_element k K).choose_spec
+lemma FinSepExTensorIsField (k K L : Type*) [Field k] [Field K] [Field L] [Algebra k K] [Algebra k L] [Module.Finite k K] [Algebra.IsSeparable k K] [GeometricallyIrreducible k L] : IsField (L ⊗[k] K) := by
 
-  let a2 : (L ⊗[k] K) := (1:L) ⊗ₜ[k] a
+  --obtain ⟨a,ha⟩ := Field.exists_primitive_element k K
 
-  let M := Algebra.adjoin L {a2}
+  let pb := Field.powerBasisOfFiniteOfSeparable k K
 
-  let : M ≃ₐ (L ⊗[k] K) := by sorry
+  let p := minpoly k pb.gen
+
+  -- case dijsonction if (Polynomial.map (algebraMap k L) p)) is unit or not
+  rcases (Classical.em <| IsUnit (Polynomial.map (algebraMap k L) p)) with Up | nUp
+
+  -- then deg p = 1 and then k=K and then L ⊗[k] K=L wich is a field
+  sorry
+  -- otherwise:
+
+  let : AdjoinRoot p ≃ₐ[k] K := by
+    apply AdjoinRoot.equiv' p pb
+    · simp
+      rfl
+    · aesop
+  let :  L ⊗[k] AdjoinRoot p ≃ₐ[k] L ⊗[k] K := by
+    apply Algebra.TensorProduct.congr AlgEquiv.refl this
+
+  let iso : AdjoinRoot (Polynomial.map (algebraMap k L) p) ≃+* L ⊗[k] K := ((foo L p).toRingEquiv).trans <| this
+
+  have : Fact (Irreducible (Polynomial.map (algebraMap k L) p)) := by
+    constructor
+    by_contra!
+    rw [irreducible_iff] at this
+    push_neg at this
+
+    obtain ⟨a,b,⟨hp,ha,hb⟩⟩ := this nUp
+
+    --K[X]/(p) = K[X]/(a) × K[X]/(b)
+    let e : AdjoinRoot (Polynomial.map (algebraMap k L) p) ≃+* AdjoinRoot a × AdjoinRoot b := by
+      --thm chinois and p is separable
+      sorry
+
+    let  : K⊗[k]L ≃+*  AdjoinRoot a × AdjoinRoot b := by
+      exact (Algebra.TensorProduct.comm k K L).toRingEquiv.trans <| iso.symm.trans <| e
+
+    -- Spec(L⊗[k]K) = Spec (K[X]/(a) × K[X]/(b)) = Spec ( K[X]/(a)) ⨿ Spec ( K[X]/(b))
+    #check (PrimeSpectrum.homeomorphOfRingEquiv this).trans PrimeSpectrum.primeSpectrumProdHomeo
+
+    -- this space is irreducible
+    let irr: IrreducibleSpace (PrimeSpectrum (K ⊗[k] L)) :=  irreducibleSpace k L K
+
+    --K/k is geometrically irreducible then Spec ( K[X]/(a)) ⨿ Spec ( K[X]/(b)) is irreducible
+    have : IrreducibleSpace <| PrimeSpectrum (AdjoinRoot a) ⊕ PrimeSpectrum (AdjoinRoot b) := by
+      let homeo := Homeomorph.isHomeomorph <| (PrimeSpectrum.homeomorphOfRingEquiv this).trans PrimeSpectrum.primeSpectrumProdHomeo
+
+      exact IsHomeomorph.irreducibleSpace _ homeo
+
+    let X := PrimeSpectrum (AdjoinRoot a) ⊕ PrimeSpectrum (AdjoinRoot b)
+    let U : Set X := (Sum.inl)'' ⊤
+    let V : Set X := (Sum.inr)'' ⊤
+
+    have : IsOpen U := by
+      apply isOpen_sum_iff.mpr
+      constructor
+      · unfold U
+        simp
+      · unfold U
+        aesop
+    have : IsOpen V := by
+      apply isOpen_sum_iff.mpr
+      constructor
+      · unfold V
+        aesop
+      · unfold V
+        simp
+      --PrimeSpectrum (AdjoinRoot a)
+
+    have nU : Nonempty U := by
+      --otherwise a is a unit
+      sorry
+
+    have nV: Nonempty V := by sorry
+
+
+    have : (U ∩ V ).Nonempty := nonempty_preirreducible_inter (by assumption) (by assumption) (by sorry ) (by sorry)
+
+    have : (U ∩ V ) = ⊥ := by sorry
+
+    apply?
+
+
+    sorry
+
+  have : Field <| AdjoinRoot (Polynomial.map (algebraMap k L) p) := by
+
+    apply @AdjoinRoot.instField _ _ (Polynomial.map (algebraMap k L) p)
+
+  apply IsFieldOfIsoField _ _ iso
+
 
   --L⊗[k]K= L(a) qui est un corps
   sorry
@@ -114,7 +264,7 @@ lemma trans (K : Type*) [Field K] [Algebra k K] [Algebra K R] [IsScalarTower k K
 
       have : IsScalarTower k k' K' := Algebra.TensorProduct.right_isScalarTower
 
-      have cb: (K' ⊗[K] R) ≃+* k' ⊗[k] R := (Algebra.TensorProduct.comm K K' R).toRingEquiv.trans <| (Algebra.TensorProduct.cancelBaseChange k K K R k').toRingEquiv.trans (Algebra.TensorProduct.comm k R k').toRingEquiv
+      have cb : (K' ⊗[K] R) ≃+* k' ⊗[k] R := (Algebra.TensorProduct.comm K K' R).toRingEquiv.trans <| (Algebra.TensorProduct.cancelBaseChange k K K R k').toRingEquiv.trans (Algebra.TensorProduct.comm k R k').toRingEquiv
 
       suffices IrreducibleSpace (PrimeSpectrum ((K' ⊗[K] R))) by
         let homeo := Homeomorph.isHomeomorph ((PrimeSpectrum.homeomorphOfRingEquiv cb))
