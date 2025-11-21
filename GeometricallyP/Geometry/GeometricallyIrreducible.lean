@@ -86,9 +86,6 @@ lemma iff_spec (R : Type u) [CommRing R] [Algebra k R] :
     exact IsHomeomorph.irreducibleSpace _ (pullbackSymmetry _
         (Spec.map (CommRingCat.ofHom (algebraMap k K)))).inv.homeomorph.isHomeomorph
 
-
-
-
 /-- Every nonempty open subscheme of a geometrically irreducible scheme is geometrically
 irreducible. -/
 @[stacks 038G "Final statement."]
