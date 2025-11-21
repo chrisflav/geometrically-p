@@ -236,7 +236,6 @@ and finitely generated subalgebra `T'` of `T`, the tensor product
 @[stacks 00I3 "(2) in contrapositive form"]
 lemma isDomain_tensorProduct_of_forall_isDomain_of_FG
     {R S T : Type*} [Field R] [CommRing S] [CommRing T] [Algebra R S] [Algebra R T]
-    [Module.Flat R S] [Module.Flat R T]
     (h : ∀ (S' : Subalgebra R S) (T' : Subalgebra R T),
       S'.FG → T'.FG → IsDomain (S' ⊗[R] T')) :
     IsDomain (S ⊗[R] T) := by
