@@ -80,24 +80,18 @@ lemma geometricallyIrreducible_of_isAffineOpen [GeometricallyIrreducible s]
       let : Nonempty (Spec Γ(X, U)) :=
         Nonempty.intro (hU.isoSpec.hom (Classical.choice hU'.to_subtype))
 
-      let a : hU.fromSpec ≫ X.toSpecΓ = Spec.map (X.presheaf.map (homOfLE le_top).op) :=
-        AlgebraicGeometry.IsAffineOpen.fromSpec_toSpecΓ hU
-      let b : s ≫ (Spec (.of k)).toSpecΓ = X.toSpecΓ ≫ Spec.map s.appTop :=
-        Scheme.toSpecΓ_naturality s
-      have c : hU.fromSpec ≫ s ≫ (Spec (.of k)).toSpecΓ
-        = Spec.map (X.presheaf.map (homOfLE le_top).op) ≫ Spec.map s.appTop := by
-          rw [b, ← Category.assoc, a]
-      have d : (Spec (.of k)).toSpecΓ ≫ Spec.map ((Scheme.ΓSpecIso <| .of k).inv)
+      let adjunction : (Spec (.of k)).toSpecΓ ≫ Spec.map ((Scheme.ΓSpecIso <| .of k).inv)
         = 𝟙 (Spec (.of k)) := by simp
       have : hU.fromSpec ≫ s = Spec.map (CommRingCat.ofHom (algebraMap k Γ(X, U))):= by
         calc hU.fromSpec ≫ s =
           hU.fromSpec ≫ s ≫ (Spec (.of k)).toSpecΓ ≫ Spec.map ((Scheme.ΓSpecIso <| .of k).inv) :=
-            (by rw [d, Category.comp_id])
+            (by rw [adjunction, Category.comp_id])
           _ = Spec.map (X.presheaf.map (homOfLE le_top).op) ≫ Spec.map s.appTop
             ≫ Spec.map ((Scheme.ΓSpecIso <| .of k).inv) := (by
             rw [← Category.assoc s (Spec (.of k)).toSpecΓ
               (Spec.map ((Scheme.ΓSpecIso <| .of k).inv)),
-              ← Category.assoc hU.fromSpec _ _, c];rfl)
+              ← Category.assoc hU.fromSpec _ _, Scheme.toSpecΓ_naturality s,
+              ← Category.assoc, AlgebraicGeometry.IsAffineOpen.fromSpec_toSpecΓ hU];rfl)
           _ = Spec.map (CommRingCat.ofHom (algebraMap k Γ(X, U))) := (by
             rw [← Spec.map_comp, ← Spec.map_comp];congr)
 
