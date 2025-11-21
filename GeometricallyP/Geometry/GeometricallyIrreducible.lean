@@ -79,10 +79,12 @@ lemma geometricallyIrreducible_of_isAffineOpen [GeometricallyIrreducible s]
       letI : Algebra k Γ(X, U) := algebraOfHomSpec s U
       let : Nonempty (Spec Γ(X, U)) :=
         Nonempty.intro (hU.isoSpec.hom (Classical.choice hU'.to_subtype))
+      let irred : GeometricallyIrreducible (hU.fromSpec ≫ s) :=
+        of_isOpenImmersion s (Spec Γ(X, U)) hU.fromSpec
 
       let adjunction : (Spec (.of k)).toSpecΓ ≫ Spec.map ((Scheme.ΓSpecIso <| .of k).inv)
         = 𝟙 (Spec (.of k)) := by simp
-      have : hU.fromSpec ≫ s = Spec.map (CommRingCat.ofHom (algebraMap k Γ(X, U))):= by
+      have : hU.fromSpec ≫ s = Spec.map (CommRingCat.ofHom (algebraMap k Γ(X, U))) :=
         calc hU.fromSpec ≫ s =
           hU.fromSpec ≫ s ≫ (Spec (.of k)).toSpecΓ ≫ Spec.map ((Scheme.ΓSpecIso <| .of k).inv) :=
             (by rw [adjunction, Category.comp_id])
@@ -96,8 +98,6 @@ lemma geometricallyIrreducible_of_isAffineOpen [GeometricallyIrreducible s]
             rw [← Spec.map_comp, ← Spec.map_comp];congr)
 
       rw [← iff_spec]
-      let irred : GeometricallyIrreducible (hU.fromSpec ≫ s) :=
-        of_isOpenImmersion s (Spec Γ(X, U)) hU.fromSpec
       simp [this] at irred
       exact irred
 
