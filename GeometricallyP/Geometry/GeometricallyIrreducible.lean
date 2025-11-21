@@ -9,7 +9,6 @@ import GeometricallyP.Mathlib.Topology.Irreducible
 import GeometricallyP.Mathlib.AlgebraicGeometry.Scheme
 import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UniversallyOpen
 import Mathlib.AlgebraicGeometry.Fiber
-import Mathlib.Topology.Irreducible
 
 /-!f
 # Geometrically irreducible schemes over a field
