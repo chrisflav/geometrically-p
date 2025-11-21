@@ -78,14 +78,29 @@ lemma geometricallyIrreducible_of_isAffineOpen (U : X.Opens) (hU : IsAffineOpen 
   -- use `of_isOpenImmersion` to reduce to the affine case
   sorry
 
+lemma _root_.irreducible_of_openCover {X ι : Type*} [TopologicalSpace X]
+    {U : ι → TopologicalSpace.Opens X} (hU : TopologicalSpace.IsOpenCover U)
+    (hn : ∀ i j, Nonempty ↑((U i).carrier ∩ (U j).carrier))
+    (h : ∀ i, IrreducibleSpace ↥(U i)) :
+    IrreducibleSpace X := by
+  apply irreducibleComponents_eq_singleton_iff.mp
+  #check exists_mem_irreducibleComponents_subset_of_isIrreducible 
+  sorry
+
+
 lemma irreducible_of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
     (hn : ∀ i j, Nonempty ↑(pullback (𝒰.f i) (𝒰.f j)))
     (h : ∀ i, IrreducibleSpace (𝒰.X i)) :
     IrreducibleSpace X := by
   -- irreducibility can be checked on an open cover
   have := 𝒰.isOpenCover_opensRange
-  have hn' : ∀ i j, Nonempty (sorry) := sorry
-  sorry
+  have hn' : ∀ i j,
+      Nonempty ↑((𝒰.f i).opensRange.carrier ∩ (𝒰.f j).opensRange.carrier) :=
+    -- nonempty pullback implies nonempty intersection of subsets
+    sorry
+  refine _root_.irreducible_of_openCover this hn' (fun i ↦ ?_)
+  apply (Set.rangeFactorization_surjective (f := (𝒰.f i))).irreducibleSpace
+  exact continuous_rangeFactorization_iff.mpr (𝒰.f i).continuous
 
 /-- If `X` is covered by geometrically irreducible open subschemes with pairwise
 non-empty intersections, `X` is geometrically irreducible. -/
