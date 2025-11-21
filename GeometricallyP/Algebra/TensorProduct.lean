@@ -248,3 +248,52 @@ lemma isDomain_tensorProduct_of_forall_isDomain_of_FG
     have : IsDomain (S' ⊗[R] T') := (h S' T' S'FG T'FG)
     apply (Algebra.TensorProduct.comm R T' S').toMulEquiv.isDomain
   apply (Algebra.TensorProduct.comm R S T').toMulEquiv.isDomain
+
+lemma Polynomial.aeval_one_tmul {R S : Type*} [CommRing R] [CommRing S]
+    [Algebra R S] {T : Type*} [CommRing T] [Algebra R T]
+    (x : S) (p : Polynomial R) :
+    (Polynomial.aeval (1 ⊗ₜ[R] x : T ⊗[R] S)) p =
+      1 ⊗ₜ[R] Polynomial.aeval x p := by
+  induction p using Polynomial.induction_on with
+  | C a => simp [Algebra.TensorProduct.tmul_one_eq_one_tmul]
+  | add p q hp hq => simp [hp, hq, tmul_add]
+  | monomial n a h =>
+    rw [pow_add, ← mul_assoc, map_mul, map_mul, map_mul,
+      ← one_mul 1, ← Algebra.TensorProduct.tmul_mul_tmul, ← h]
+    simp
+
+noncomputable
+def AdjoinRoot.mapEquivTensorProduct {R : Type*} (S : Type*) [CommRing R] [CommRing S]
+    [Algebra R S] (p : Polynomial R) :
+    AdjoinRoot (p.map (algebraMap R S)) ≃ₐ[S] S ⊗[R] AdjoinRoot p := by
+  refine AlgEquiv.ofAlgHom (AdjoinRoot.liftAlgHom _ (Algebra.ofId _ _)
+      (1 ⊗ₜ AdjoinRoot.root p)
+      (by simp [← Polynomial.aeval_def, Polynomial.aeval_one_tmul]))
+    (Algebra.TensorProduct.lift (Algebra.ofId _ _)
+      (AdjoinRoot.liftAlgHom _ (Algebra.ofId _ _)
+      (AdjoinRoot.root _) ?_) fun _ _ ↦ Commute.all _ _) ?_ ?_
+  · dsimp only [Algebra.toRingHom_ofId]
+    rw [← Polynomial.aeval_def, ← Polynomial.aeval_map_algebraMap S, AdjoinRoot.aeval_eq]
+    simp
+  · ext; simp
+  · ext; simp
+
+noncomputable
+def IsAdjoinRoot.tensorProduct {R S T : Type*} [CommRing R] [CommRing S]
+    [Algebra R S] (p : Polynomial R) [CommRing T] [Algebra R T] (h : IsAdjoinRoot T p) :
+    IsAdjoinRoot (S ⊗[R] T) (p.map (algebraMap R S)) :=
+  IsAdjoinRoot.ofAlgEquiv (AdjoinRoot.isAdjoinRoot _) <|
+    AlgEquiv.trans (AdjoinRoot.mapEquivTensorProduct _ _)
+      (Algebra.TensorProduct.congr .refl h.adjoinRootAlgEquiv)
+
+lemma IsReduced.of_isAdjoinRoot_of_squareFree {R S : Type*} [CommRing R]
+    [DecompositionMonoid (Polynomial R)] [CommRing S] [Algebra R S] (p : Polynomial R)
+    (h : IsAdjoinRoot S p) (hp : Squarefree p) :
+    IsReduced S := by
+  refine ⟨fun x ⟨n, hn⟩ ↦ ?_⟩
+  obtain ⟨x, rfl⟩ := h.map_surjective x
+  rw [← map_pow] at hn
+  rw [← RingHom.mem_ker, h.ker_map, Ideal.mem_span_singleton] at hn ⊢
+  obtain (rfl | hne) := eq_or_ne n 0
+  · exact hn.trans (one_dvd x)
+  · rwa [hp.dvd_pow_iff_dvd hne] at hn
