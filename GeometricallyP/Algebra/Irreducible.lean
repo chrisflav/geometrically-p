@@ -213,20 +213,6 @@ lemma isDomain_iff_isReduced_and_irreducibleSpace {R : Type*} [CommRing R] :
       apply Ideal.minimalPrimes_isPrime (h_in)
     exact IsDomain.of_bot_isPrime R
 
-/-- If `Spec R` is irreducible and `S` is an `R`-algebra such that the induced
-map `Spec S → Spec R` is open and for a dense set of primes `p` of `R`, the fibre
-`Spec (S ⊗[R] κ(p))` is irreducible, then `Spec S` is irreducible. -/
-lemma PrimeSpectrum.irreducibleSpace_of_isOpenMap_of_dense
-    {R S : Type*} [CommRing R] [CommRing S] [Algebra R S]
-    [IrreducibleSpace (PrimeSpectrum R)]
-    (hf : IsOpenMap (PrimeSpectrum.comap <| algebraMap R S))
-    {s : Set (PrimeSpectrum R)} (hs : Dense s)
-    (H : ∀ p ∈ s,
-      IrreducibleSpace (PrimeSpectrum <| S ⊗[R] p.asIdeal.ResidueField)) :
-    IrreducibleSpace (PrimeSpectrum S) :=
-  -- use ...
-  sorry
-
 noncomputable def homeomorph_ofClosedDenseEmbedding {X Y : Type*} [TopologicalSpace X]
     [TopologicalSpace Y] (f : X → Y) (hfc : Topology.IsClosedEmbedding f)
     (hfd : DenseRange f) : X ≃ₜ Y := by
