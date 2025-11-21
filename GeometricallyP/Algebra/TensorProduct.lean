@@ -4,6 +4,7 @@ import Mathlib.FieldTheory.SeparableDegree
 import Mathlib.RingTheory.Spectrum.Prime.Topology
 import Mathlib.RingTheory.Ideal.GoingDown
 import Mathlib.RingTheory.RingHom.Flat
+import Mathlib.RingTheory.IsAdjoinRoot
 
 /-!
 # Auxiliary results on tensor products
@@ -151,13 +152,148 @@ lemma eq_zero_or_eq_one_of_isIdempotentElem_of_forall_isSeparable
   -- argue as in `subsingleton_minimalPrimes_of_isSeparable`
   sorry
 
+/-- Given subalgebras `C` and `C'` of an `R`-algebra A and another `R`-algebra B,
+the base change of `C` along `B` is a subalgebra of the base change of `C'` along `B`. -/
+lemma Subalgebra.baseChange_mono {R A : Type*} [CommSemiring R] [Semiring A]
+    [Algebra R A] (B : Type*) [CommSemiring B]
+    [Algebra R B] {C C' : Subalgebra R A} (h : C ≤ C') :
+    C.baseChange B ≤ C'.baseChange B := by
+  rintro x ⟨y, rfl⟩
+  induction y with
+  | zero => simp
+  | tmul x y => simpa using C'.tmul_mem_baseChange (h y.2) _
+  | add x y hx hy => rw [map_add]; exact Subalgebra.add_mem _ hx hy
+
+/-- If `S` is flat over R and for every finitely generated subalgebra `T'` of `T`,
+the tensor product `S ⊗[R] T'` is a domain, then also `S ⊗[R] T` is a domain. -/
+lemma isDomain_tensorProduct_of_forall_isDomain_of_FG_right
+    {R S T : Type*} [CommRing R] [CommRing S] [CommRing T] [Algebra R S] [Algebra R T]
+    [Module.Flat R S] (h : ∀ (T' : Subalgebra R T), T'.FG → IsDomain (S ⊗[R] T')) :
+    IsDomain (S ⊗[R] T) := by
+  rw [isDomain_iff_noZeroDivisors_and_nontrivial, noZeroDivisors_iff]
+  contrapose h
+  push_neg
+  rw [Classical.not_and_iff_not_or_not] at h
+  rcases h with zero_div | trivial
+  · push_neg at zero_div
+    obtain ⟨x, y, hxy, hx, hy⟩ := zero_div
+    have : ∃ (T' : Subalgebra R T), T'.FG ∧ x ∈ T'.baseChange S ∧ y ∈ T'.baseChange S := by
+      have : _ := exists_fg_and_mem_baseChange x
+      obtain ⟨T₁, T₁FG, xbc⟩ := this
+      have : _ := exists_fg_and_mem_baseChange y
+      obtain ⟨T₂, T₂FG, ybc⟩ := this
+      use T₁ ⊔ T₂, (Subalgebra.FG.sup T₁FG T₂FG)
+      constructor
+      · apply Subalgebra.baseChange_mono
+        · exact le_sup_left
+        exact xbc
+      · apply Subalgebra.baseChange_mono
+        · exact le_sup_right
+        exact ybc
+    obtain ⟨T', T'FG, ⟨x', hx'⟩, ⟨y', hy'⟩⟩ := this
+    use T', T'FG
+    rw [isDomain_iff_noZeroDivisors_and_nontrivial, noZeroDivisors_iff]
+    rw [Classical.not_and_iff_not_or_not]
+    left
+    push_neg
+    use x', y'
+    let f := (Algebra.TensorProduct.map (AlgHom.id S S) T'.val).toRingHom
+    have inj_f : Function.Injective f := by
+      apply Module.Flat.lTensor_preserves_injective_linearMap
+      exact Subtype.val_injective
+    constructor
+    · apply inj_f
+      rw [f.map_mul, f.map_zero, hx', hy']
+      exact hxy
+    · constructor
+      · intro hx'₂
+        have : f x' = 0 := by
+          rw [hx'₂]
+          exact f.map_zero
+        rw [hx'] at this
+        contradiction
+      · intro hy'₂
+        have : f y' = 0 := by
+          rw [hy'₂]
+          exact f.map_zero
+        rw [hy'] at this
+        contradiction
+  push_neg at trivial
+  use (⊥ : Subalgebra R T), Subalgebra.fg_bot
+  rw [isDomain_iff_noZeroDivisors_and_nontrivial, noZeroDivisors_iff]
+  rw [Classical.not_and_iff_not_or_not]
+  right
+  push_neg
+  let f := (Algebra.TensorProduct.map (AlgHom.id S S) (⊥ : Subalgebra R T).val).toRingHom
+  have inj_f : Function.Injective f := by
+    apply Module.Flat.lTensor_preserves_injective_linearMap
+    exact Subtype.val_injective
+  apply Function.Injective.subsingleton inj_f
+
 /-- If for every finitely generated subalgebra `S'` of `S`
 and finitely generated subalgebra `T'` of `T`, the tensor product
 `S' ⊗[R] T'` is a domain, then also `S ⊗[R] T` is a domain. -/
 @[stacks 00I3 "(2) in contrapositive form"]
 lemma isDomain_tensorProduct_of_forall_isDomain_of_FG
-    {R S T : Type*} [CommRing R] [CommRing S] [CommRing T] [Algebra R S] [Algebra R T]
-    (H : ∀ (S' : Subalgebra R S) (T' : Subalgebra R T),
+    {R S T : Type*} [Field R] [CommRing S] [CommRing T] [Algebra R S] [Algebra R T]
+    [Module.Flat R S] [Module.Flat R T]
+    (h : ∀ (S' : Subalgebra R S) (T' : Subalgebra R T),
       S'.FG → T'.FG → IsDomain (S' ⊗[R] T')) :
-    IsDomain (S ⊗[R] T) :=
-  sorry
+    IsDomain (S ⊗[R] T) := by
+  apply isDomain_tensorProduct_of_forall_isDomain_of_FG_right
+  intro T' T'FG
+  have : IsDomain (T' ⊗[R] S) := by
+    apply isDomain_tensorProduct_of_forall_isDomain_of_FG_right
+    intro S' S'FG
+    have : IsDomain (S' ⊗[R] T') := (h S' T' S'FG T'FG)
+    apply (Algebra.TensorProduct.comm R T' S').toMulEquiv.isDomain
+  apply (Algebra.TensorProduct.comm R S T').toMulEquiv.isDomain
+
+lemma Polynomial.aeval_one_tmul {R S : Type*} [CommRing R] [CommRing S]
+    [Algebra R S] {T : Type*} [CommRing T] [Algebra R T]
+    (x : S) (p : Polynomial R) :
+    (Polynomial.aeval (1 ⊗ₜ[R] x : T ⊗[R] S)) p =
+      1 ⊗ₜ[R] Polynomial.aeval x p := by
+  induction p using Polynomial.induction_on with
+  | C a => simp [Algebra.TensorProduct.tmul_one_eq_one_tmul]
+  | add p q hp hq => simp [hp, hq, tmul_add]
+  | monomial n a h =>
+    rw [pow_add, ← mul_assoc, map_mul, map_mul, map_mul,
+      ← one_mul 1, ← Algebra.TensorProduct.tmul_mul_tmul, ← h]
+    simp
+
+noncomputable
+def AdjoinRoot.mapEquivTensorProduct {R : Type*} (S : Type*) [CommRing R] [CommRing S]
+    [Algebra R S] (p : Polynomial R) :
+    AdjoinRoot (p.map (algebraMap R S)) ≃ₐ[S] S ⊗[R] AdjoinRoot p := by
+  refine AlgEquiv.ofAlgHom (AdjoinRoot.liftAlgHom _ (Algebra.ofId _ _)
+      (1 ⊗ₜ AdjoinRoot.root p)
+      (by simp [← Polynomial.aeval_def, Polynomial.aeval_one_tmul]))
+    (Algebra.TensorProduct.lift (Algebra.ofId _ _)
+      (AdjoinRoot.liftAlgHom _ (Algebra.ofId _ _)
+      (AdjoinRoot.root _) ?_) fun _ _ ↦ Commute.all _ _) ?_ ?_
+  · dsimp only [Algebra.toRingHom_ofId]
+    rw [← Polynomial.aeval_def, ← Polynomial.aeval_map_algebraMap S, AdjoinRoot.aeval_eq]
+    simp
+  · ext; simp
+  · ext; simp
+
+noncomputable
+def IsAdjoinRoot.tensorProduct {R S T : Type*} [CommRing R] [CommRing S]
+    [Algebra R S] (p : Polynomial R) [CommRing T] [Algebra R T] (h : IsAdjoinRoot T p) :
+    IsAdjoinRoot (S ⊗[R] T) (p.map (algebraMap R S)) :=
+  IsAdjoinRoot.ofAlgEquiv (AdjoinRoot.isAdjoinRoot _) <|
+    AlgEquiv.trans (AdjoinRoot.mapEquivTensorProduct _ _)
+      (Algebra.TensorProduct.congr .refl h.adjoinRootAlgEquiv)
+
+lemma IsReduced.of_isAdjoinRoot_of_squareFree {R S : Type*} [CommRing R]
+    [DecompositionMonoid (Polynomial R)] [CommRing S] [Algebra R S] (p : Polynomial R)
+    (h : IsAdjoinRoot S p) (hp : Squarefree p) :
+    IsReduced S := by
+  refine ⟨fun x ⟨n, hn⟩ ↦ ?_⟩
+  obtain ⟨x, rfl⟩ := h.map_surjective x
+  rw [← map_pow] at hn
+  rw [← RingHom.mem_ker, h.ker_map, Ideal.mem_span_singleton] at hn ⊢
+  obtain (rfl | hne) := eq_or_ne n 0
+  · exact hn.trans (one_dvd x)
+  · rwa [hp.dvd_pow_iff_dvd hne] at hn

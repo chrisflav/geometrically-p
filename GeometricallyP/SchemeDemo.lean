@@ -3,9 +3,16 @@ Copyright (c) 2025 Christian Merten. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Christian Merten
 -/
-import Mathlib.AlgebraicGeometry.Morphisms.Basic
+import Mathlib.AlgebraicGeometry.Morphisms.Etale
+import Mathlib.AlgebraicGeometry.Morphisms.Proper
 import Mathlib.AlgebraicGeometry.Morphisms.ClosedImmersion
+import Mathlib.AlgebraicGeometry.Morphisms.UniversallyInjective
 import Mathlib.AlgebraicGeometry.ResidueField
+import Mathlib.AlgebraicGeometry.FunctionField
+import Mathlib.AlgebraicGeometry.Noetherian
+import Mathlib.AlgebraicGeometry.ProjectiveSpectrum.Basic
+import Mathlib.RingTheory.RingHom.Flat
+import Mathlib.Tactic.DepRewrite
 
 /-!
 # Schemes in mathlib
@@ -114,12 +121,12 @@ As you would expect, a `Scheme` is defined as a locally ringed space that is loc
 to the spectrum of a ring.
 -/
 
--- We can apply a morphism of schemes to an element.
-example (X Y : Scheme) (f : X ⟶ Y) (x : X) : Y := f x
-
 -- As before, we can compose morphisms of schemes in the same way as we can compose
 -- morphisms of commutative rings:
 example (X Y : Scheme) (f : X ⟶ Y) : X ⟶ Y := f ≫ 𝟙 Y
+
+-- We can apply a morphism of schemes to an element.
+example (X Y : Scheme) (f : X ⟶ Y) (x : X) : Y := f x
 
 /-
 Sections of `𝒪 = 𝒪_X` over an open can be written with the notation `Γ(X, U)`.
@@ -140,7 +147,9 @@ example (f : X ⟶ Y) (U : Y.Opens) : Γ(Y, U) ⟶ Γ(X, f ⁻¹ᵁ U) :=
 example (f : X ⟶ Y) (U : Y.Opens) (V : X.Opens) (h : V ≤ f ⁻¹ᵁ U) : Γ(Y, U) ⟶ Γ(X, V) :=
   f.appLE U V h
 
-/- -/
+/- Restriction of a morphism of schemes along an open of the target. -/
+noncomputable example (f : X ⟶ Y) (U : Y.Opens) : (f ⁻¹ᵁ U : Scheme) ⟶ U :=
+  f ∣_ U
 
 /-!
 One of the reasons we use the bundled approach for `Scheme`s, is the heavy reliance on category
@@ -152,7 +161,45 @@ category of `Schemes`. -/
 noncomputable example (X Y Z : Scheme) (f : X ⟶ Z) (g : Y ⟶ Z) : Scheme :=
   pullback f g
 
+/-
+Note: `f ∣_ U` is *not* the projection `X ×[Y] U ⟶ U`, but sometimes
+using `X ×[Y] U` is convenient.
+-/
+
+/-! ### Affine schemes -/
+
+/-- `Spec R` is affine. -/
+example (R : CommRingCat) : IsAffine (Spec R) :=
+  inferInstance
+
+/-- If `X` is an affine scheme, it is isomorphic to `Spec Γ(X, ⊤)`. -/
+noncomputable example (X : Scheme) [IsAffine X] : X ≅ Spec Γ(X, ⊤) :=
+  X.isoSpec
+
+/-- Some proofs of being affine can be found by instance synthesis. -/
+example {X Y Z : Scheme} (f : X ⟶ Z) (g : Y ⟶ Z) [IsAffine X] [IsAffine Y] [IsAffine Z] :
+    IsAffine (pullback f g) :=
+  inferInstance
+
 end Definition
+
+section CategoriesAndFunctors
+
+/-! ## Categories and functors
+
+We have already seen examples of categories, but not yet examples of functors.
+-/
+
+/- The `Spec` functor `CommRingCatᵒᵖ ⥤ Scheme`. -/
+#check AlgebraicGeometry.Scheme.Spec
+
+example (R : CommRingCat) : Scheme.Spec.obj (Opposite.op R) = Spec R := rfl
+
+/- In this language, the `Γ`-`Spec`-adjunction is phrased as: -/
+noncomputable
+example : Scheme.Γ.rightOp ⊣ Scheme.Spec := ΓSpec.adjunction
+
+end CategoriesAndFunctors
 
 noncomputable section
 
@@ -207,20 +254,6 @@ for example write `f.fiber`.
 
 end Stalks
 
-section CategoryTheory
-
-/-!
-## Category theory
--/
-
-/-
-- isomorphisms
-- functors
-- natural transformations?
--/
-
-end CategoryTheory
-
 section Subschemes
 
 /-! ## Subschemes -/
@@ -239,6 +272,11 @@ open immersions instead.
 -/
 example (f : U ⟶ X) [IsOpenImmersion f] : X.Opens := f.opensRange
 
+/-- We rely on typeclass inference to automatically fill proofs using stability properties. -/
+example {V : Scheme} (f : U ⟶ V) (g : V ⟶ X) [IsOpenImmersion f] [IsOpenImmersion g] :
+    IsOpenImmersion (f ≫ g) :=
+  inferInstance
+
 /-! ### Closed subschemes -/
 
 example (f : Y ⟶ X) [IsClosedImmersion f] : IsClosed (Set.range f) :=
@@ -255,15 +293,50 @@ end Subschemes
 
 section Properties
 
-/-! ## Properties of morphisms -/
+/-!
+## Properties of morphisms
 
-/-! ### Open subschemes -/
+Mathlib knows many properties of morphisms. Browsing the `AlgebraicGeometry/Morphisms` folder
+gives an overview. The properties are defined as type classes.
+-/
+
+example {X Y Z : Scheme} (f : X ⟶ Z) (g : Y ⟶ Z) [IsProper f] :
+    IsSeparated (pullback.snd f g) :=
+  inferInstance
+
+/-- Properties of morphisms obtained from typeclass instances, usually have handy shortcuts. -/
+example {X Y : Scheme} (f : X ⟶ Y) [UniversallyInjective f] : Function.Injective f :=
+  f.injective
+
+/-! ### Morphism properties -/
+
+/- A `MorphismProperty` is a property of morphisms. -/
+variable (P : MorphismProperty Scheme)
+
+/- There exist meta properties for morphism properties, for example
+being stable under composition, base change, etc. -/
+#check MorphismProperty.IsStableUnderComposition
+#check MorphismProperty.IsStableUnderBaseChange
+#check MorphismProperty.RespectsIso
+
+/- But also some more technical ones: -/
+#check MorphismProperty.HasOfPostcompProperty
+
+example : MorphismProperty.HasOfPostcompProperty
+    @IsEtale (@LocallyOfFiniteType ⊓ @FormallyUnramified) :=
+  inferInstance
+
+/- There are analogues for these in the language of commutative rings: -/
+#check RingHom.StableUnderComposition
+#check RingHom.IsStableUnderBaseChange
+#check RingHom.RespectsIso
 
 /-
-- open immersions
-- separated
-- universally injective
+Besides properties of properties, we also use abstract constructions of properties.
 -/
+#check MorphismProperty.universally
+#check MorphismProperty.diagonal
+#check topologically
 
 end Properties
 
@@ -271,13 +344,172 @@ section ReductionToAffine
 
 /-! ## Reduction to affine case -/
 
+/-!
+### (Open) covers
+
+Any reduction to a local problem starts with an (affine) open cover. These
+can be pulled back along morphisms, refined, etc.
+-/
+
+variable (X : Scheme)
+
+#check Scheme.OpenCover
+
+/-- Pullback an open cover along an arbitrary morphism. -/
+example {X Y : Scheme} (f : X ⟶ Y) (𝒰 : Y.OpenCover) : X.OpenCover :=
+  𝒰.pullback₁ f
+
+/-- Refine every component of an open cover by an open cover. -/
+example {X : Scheme} (𝒰 : X.OpenCover) (𝒱 : ∀ i, (𝒰.X i).OpenCover) : X.OpenCover :=
+  𝒰.bind 𝒱
+
+/-- A choice of affine cover of `X`. -/
+example (X : Scheme) : X.OpenCover :=
+  X.affineCover
+
+/-- The components of `X.affineCover` are *definitionally equal* to some `Spec R` for
+`R : CommRingCat`. -/
+example (X : Scheme) (i : X.affineCover.I₀) :
+    ∃ R, X.affineCover.X i = Spec R :=
+  ⟨_, rfl⟩
+
+/-! ### Properties of properties -/
+
 variable (P : MorphismProperty Scheme)
-variable (X : Scheme) (𝒰 : X.OpenCover)
+
+#check IsZariskiLocalAtTarget
+#check IsZariskiLocalAtSource
+
+#check IsZariskiLocalAtTarget.iff_of_openCover
+#check IsZariskiLocalAtSource.iff_of_openCover
+
+section
+
+variable {X Y : Scheme.{u}}
+
+/-! ### Example: Flat morphisms -/
+
+@[mk_iff]
+class Flat (f : X ⟶ Y) : Prop where
+  flat_of_isAffineOpen :
+    ∀ (U : Y.Opens) (V : X.Opens) (e : V ≤ f ⁻¹ᵁ U),
+      IsAffineOpen U → IsAffineOpen V → (f.appLE U V e).hom.Flat
+
+instance : HasRingHomProperty @Flat RingHom.Flat where
+  isLocal_ringHomProperty := RingHom.Flat.propertyIsLocal
+  eq_affineLocally' := by
+    ext X Y f
+    rw [flat_iff, affineLocally_iff_affineOpens_le]
+    simp only [Scheme.affineOpens, Set.coe_setOf, Set.mem_setOf_eq, Subtype.forall]
+    grind
+
+example : IsZariskiLocalAtTarget @Flat :=
+  inferInstance
+
+-- this should be in mathlib
+/-- If `P = X ×[Z] Y` and `Y ⟶ Z` is an open immersion, then the stalk map
+of `P ⟶ Y` at some `x : P` is isomorphic to the stalk map of `X ⟶ Z` at the image of `x`. -/
+def stalkMapIsoOfIsPullback {X Y Z P : Scheme.{u}} {fst : P ⟶ X} {snd : P ⟶ Y}
+    {f : X ⟶ Z} (g : Y ⟶ Z) (h : IsPullback fst snd f g) [IsOpenImmersion g] (x : P) :
+    Arrow.mk (snd.stalkMap x) ≅ Arrow.mk (f.stalkMap <| fst x) :=
+  haveI : IsOpenImmersion fst := MorphismProperty.of_isPullback h.flip ‹_›
+  Iso.symm <| Arrow.isoMk' _ _
+    ((TopCat.Presheaf.stalkCongr _ <| .of_eq (congr($(h.1.1).base x))) ≪≫
+      (asIso (g.stalkMap <| (snd x))))
+    (asIso (fst.stalkMap <| x)) <| TopCat.Presheaf.stalk_hom_ext _ fun V hxV ↦ by
+      simp only [Scheme.Hom.comp_base, TopCat.hom_comp, ContinuousMap.comp_apply, Iso.trans_hom,
+        TopCat.Presheaf.stalkCongr_hom, asIso_hom, Category.assoc,
+        TopCat.Presheaf.germ_stalkSpecializes_assoc, Scheme.Hom.germ_stalkMap_assoc,
+        Scheme.Hom.germ_stalkMap]
+      simp only [← Scheme.Hom.comp_app_assoc, ← Scheme.Hom.comp_preimage]
+      rw! [h.1.1]
+
+theorem flat_of_flat_stalkMap (f : X ⟶ Y) (H : ∀ x, (f.stalkMap x).hom.Flat) :
+    Flat f := by
+  wlog hY : ∃ R, Y = Spec R generalizing X Y f
+  · rw [IsZariskiLocalAtTarget.iff_of_openCover (P := @Flat) Y.affineCover]
+    intro i
+    refine this _ ?_ ⟨_, rfl⟩
+    intro x
+    rw [RingHom.Flat.respectsIso.arrow_mk_iso_iff]
+    · apply H
+      dsimp at x
+      exact pullback.fst f _ x
+    · dsimp [Scheme.Cover.pullbackHom]
+      apply stalkMapIsoOfIsPullback (Y.affineCover.f i)
+      apply IsPullback.of_hasPullback
+  obtain ⟨R, rfl⟩ := hY
+  wlog hX : ∃ S, X = Spec S generalizing X f
+  · rw [IsZariskiLocalAtSource.iff_of_openCover (P := @Flat) X.affineCover]
+    intro i
+    refine this _ ?_ ⟨_, rfl⟩
+    intro x
+    rw [Scheme.Hom.stalkMap_comp, CommRingCat.hom_comp,
+      RingHom.Flat.respectsIso.cancel_right_isIso]
+    apply H
+  obtain ⟨S, rfl⟩ := hX
+  obtain ⟨φ, rfl⟩ := Spec.map_surjective f
+  rw [HasRingHomProperty.Spec_iff (P := @Flat)]
+  apply RingHom.Flat.ofLocalizationPrime
+  intro P hP
+  specialize H ⟨P, hP⟩
+  rwa [RingHom.Flat.respectsIso.arrow_mk_iso_iff (Scheme.arrowStalkMapSpecIso φ _)] at H
+
+end
 
 end ReductionToAffine
 
-/-! ## Schemes over a base -/
+/-!
+## Schemes over a base
 
--- in particular the special case of a scheme over a field
+We have multiple ways of talking about a scheme over a base.
+-/
 
-/-! ## Varieties -/
+/- Version 1: A scheme over `Y` is simply a morphism `X ⟶ Y`. -/
+variable {X S : Scheme} (f : X ⟶ S)
+
+/- Version 2: There exists a typeclass `Scheme.Over` that bundles a preferred choice of morphism. -/
+variable {X S : Scheme} [X.Over S]
+example : X ⟶ S := X ↘ S
+
+/- Version 3: As a last resort, we can also use the over category. -/
+variable {S : Scheme} (X : Over S)
+example : X.left ⟶ S := X.hom
+
+/- In particular, we can take the base change. -/
+
+/- In version 1: -/
+variable {X S : Scheme} (f : X ⟶ S)
+example {T : Scheme} (g : T ⟶ S) : pullback f g ⟶ T := pullback.snd _ _
+
+/- In version 3 -/
+variable {S : Scheme} (X : Over S)
+example {T : Scheme} (g : T ⟶ S) : ((Over.pullback g).obj X).left ⟶ T :=
+  ((Over.pullback g).obj X).hom
+
+/- In particular, we can do the above in the special case where `S = Spec k` for some field `k`. -/
+
+/-! ## Varieties
+
+There is no `AlgebraicGeometry.Variety` and there will most likely never be such a definition.
+-/
+
+/-- But you are free to create your local definition of variety (downstream of mathlib). -/
+class Variety {X : Scheme} {k : Type} [Field k] (s : X ⟶ Spec (.of k)) : Prop
+    extends IsSeparated s, LocallyOfFiniteType s
+
+
+/-! ## More topics -/
+
+/- Function field of a scheme. -/
+#check Scheme.functionField
+
+/- (Locally) Noetherian schemes. -/
+#check IsLocallyNoetherian
+#check IsNoetherian
+
+/- Projective spectrum of a graded ring. -/
+variable {σ : Type} {A : Type}
+variable [CommRing A] [SetLike σ A] [AddSubgroupClass σ A]
+variable (𝒜 : ℕ → σ) [GradedRing 𝒜]
+#check Proj 𝒜
