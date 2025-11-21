@@ -6,8 +6,12 @@ Authors: Christian Merten
 import GeometricallyP.Algebra.TensorProduct
 import GeometricallyP.Mathlib.Topology.Homeomorph.Lemmas
 import GeometricallyP.Mathlib.FieldTheory.PurelyInseparable.Basic
+import GeometricallyP.Mathlib.RingTheory.Spectrum.Prime.RingHom
 import Mathlib.RingTheory.Flat.TorsionFree
 import Mathlib.RingTheory.Spectrum.Prime.Homeomorph
+import Mathlib.RingTheory.Spectrum.Prime.Jacobson
+import Mathlib.RingTheory.Spectrum.Prime.Chevalley
+import Mathlib.RingTheory.FiniteStability
 
 /-!
 # Irreducibility of prime spectrum
@@ -114,20 +118,97 @@ lemma PrimeSpectrum.irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed
   (irreducibleSpace_iff_of_ringEquiv (Algebra.TensorProduct.lid k R).symm.toRingEquiv).trans
     (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosure k R k L)
 
-@[stacks 00I7 "For domains of finite type over `k`."]
+noncomputable def PrimeSpectrum.algEquiv_residueField_of_isAlgClosed
+    [IsAlgClosed k] [Algebra.FiniteType k R]
+    (p : PrimeSpectrum R) [hp : p.asIdeal.IsMaximal] :
+    k ≃ₐ[k] p.asIdeal.ResidueField :=
+  let e₁ :=
+    (AlgEquiv.ofBijective _ p.asIdeal.bijective_algebraMap_quotient_residueField).restrictScalars k
+  let : Field (R ⧸ p.asIdeal) := Ideal.Quotient.field _
+  have : Module.Finite k (R ⧸ p.asIdeal) :=
+    finite_of_finite_type_of_isJacobsonRing k (R ⧸ p.asIdeal)
+  let e₀ : k ≃ₐ[k] (R ⧸ p.asIdeal) :=
+    (AlgEquiv.ofBijective (ofId _ _) IsAlgClosed.algebraMap_bijective_of_isIntegral)
+  e₀.trans e₁
+
+open TensorProduct in
+@[stacks 00I7 "For algebras of finite type over `k`."]
 private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [IsAlgClosed k]
-    {S : Type*} [CommRing S] [Algebra k S] [Algebra.FiniteType k S]
-    [IsDomain S] [Algebra.FiniteType k R] [IsDomain R]
+    {S : Type*} [CommRing S] [Algebra k S]
+    [Algebra.FiniteType k R] [Algebra.FiniteType k S]
     (hR : IrreducibleSpace (PrimeSpectrum R))
     (hS : IrreducibleSpace (PrimeSpectrum S)) :
-    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
-  sorry
+    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) where
+  isPreirreducible_univ := by
+    have : IsJacobsonRing R := isJacobsonRing_of_finiteType (A := k)
+    have hc : closure (closedPoints (PrimeSpectrum R)) = Set.univ := closure_closedPoints
+    have h := hR.isIrreducible_univ.isPreirreducible.preimage_of_dense_isPreirreducible_fiber
+      (X := PrimeSpectrum (R ⊗[k] S))
+      (f := comap <| (algebraMap R (R ⊗[k] S)))
+    simp only [Set.univ_inter, Set.univ_subset_iff, Set.preimage_univ] at h
+    apply h
+    · have : FinitePresentation R (R ⊗[k] S) :=
+        have : IsNoetherianRing R := Algebra.FiniteType.isNoetherianRing k R
+        FinitePresentation.of_finiteType.mp (inferInstance)
+      apply isOpenMap_comap_of_hasGoingDown_of_finitePresentation
+    · rw [← dense_iff_closure_eq] at hc ⊢
+      refine hc.mono (fun p hp ↦ ?_)
+      rw [mem_closedPoints_iff, isClosed_singleton_iff_isMaximal p] at hp
+      have : IrreducibleSpace (PrimeSpectrum ((R ⊗[k] S) ⊗[R] p.asIdeal.ResidueField)) :=
+        let e₀ : (p.asIdeal.ResidueField ⊗[R] (R ⊗[k] S)) ≃+* (p.asIdeal.ResidueField ⊗[k] S) :=
+          (cancelBaseChange _ _ R _ _).toRingEquiv
+        let e₁ : (p.asIdeal.ResidueField ⊗[k] S) ≃+* S :=
+          (Algebra.TensorProduct.congr (algEquiv_residueField_of_isAlgClosed p).symm
+            AlgEquiv.refl).trans (Algebra.TensorProduct.lid k S)
+        (irreducibleSpace_iff_of_ringEquiv <|
+          (Algebra.TensorProduct.comm R _ p.asIdeal.ResidueField).toRingEquiv.trans <|
+          e₀.trans e₁).mpr hS
+      simpa [comap, preimage_eq_range_tensor_residueField R (R ⊗[k] S) p] using
+        this.isPreirreducible_univ.image _ <| continuousOn_univ.mpr (comap _).continuous_toFun
+  toNonempty :=
+    have := (irreducibleSpace_iff.mp hR).1
+    have := (irreducibleSpace_iff.mp hS).1
+    have := nontrivial_of_algebraMap_injective_of_flat_left k R S (RingHom.injective _)
+    inferInstance
+
+lemma minimalPrimes_eq_singleton_nilradical {R : Type*} [CommRing R]
+    [IrreducibleSpace (PrimeSpectrum R)] :
+    minimalPrimes R = {nilradical R} := by
+  have : (minimalPrimes R).Nonempty ∧ (minimalPrimes R).Subsingleton := by
+    constructor
+    · have : Nontrivial R := by
+        exact (PrimeSpectrum.irreducibleSpace_iff.mp inferInstance).1
+      have h : (⊥ : Ideal R) ≠ ⊤ := by
+        exact bot_ne_top
+      rw [← Set.nonempty_coe_sort]
+      exact Ideal.nonempty_minimalPrimes h
+    · exact (PrimeSpectrum.irreducibleSpace_iff.mp inferInstance).2
+  rw [← Set.exists_eq_singleton_iff_nonempty_subsingleton] at this
+  obtain ⟨I, hI⟩ := this
+  rw [hI, Set.singleton_eq_singleton_iff, nilradical, Submodule.zero_eq_bot,
+    ← Ideal.sInf_minimalPrimes, ← minimalPrimes, hI]
+  simp
 
 /-- A ring is a domain if and only if it is reduced and its prime spectrum
 is irreducible. -/
 lemma isDomain_iff_isReduced_and_irreducibleSpace {R : Type*} [CommRing R] :
-    IsDomain R ↔ IsReduced R ∧ IrreducibleSpace (PrimeSpectrum R) :=
-  sorry
+    IsDomain R ↔ IsReduced R ∧ IrreducibleSpace (PrimeSpectrum R) := by
+  constructor
+  · intro h
+    constructor
+    · infer_instance
+    exact PrimeSpectrum.irreducibleSpace
+  · intro h
+    obtain ⟨hred, hirr⟩ := h
+    have h1 : (minimalPrimes R) = {(⊥ : Ideal R)} := by
+      rw [minimalPrimes_eq_singleton_nilradical]
+      simp
+    have h_in : (⊥ : Ideal R) ∈ (minimalPrimes R) := by
+      rw [h1]
+      simp
+    have hbp2 :(⊥ : Ideal R).IsPrime := by
+      apply Ideal.minimalPrimes_isPrime (h_in)
+    exact IsDomain.of_bot_isPrime R
 
 /-- If `Spec R` is irreducible and `S` is an `R`-algebra such that the induced
 map `Spec S → Spec R` is open and for a dense set of primes `p` of `R`, the fibre

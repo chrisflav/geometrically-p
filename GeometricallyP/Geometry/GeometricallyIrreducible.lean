@@ -55,9 +55,36 @@ the `k`-algebra `R` is geometrically irreducible. -/
 -- quite different.
 lemma iff_spec (R : Type u) [CommRing R] [Algebra k R] :
     GeometricallyIrreducible (Spec (.of R) ↘ Spec (.of k)) ↔
-      Algebra.GeometricallyIrreducible k R :=
-  -- Timo
-  sorry
+      Algebra.GeometricallyIrreducible k R := by
+  rw [iff_irreducibleSpace_pullback]
+  constructor
+  · rw [Algebra.geometricallyIrreducible_iff]
+    intro h
+    let irred : IrreducibleSpace ↥(pullback
+        (Spec.map (CommRingCat.ofHom (algebraMap k R)))
+        (Spec.map (CommRingCat.ofHom (algebraMap k (AlgebraicClosure k))))) :=
+      h (AlgebraicClosure k)
+    have irred_switch_tp : IrreducibleSpace ↥(pullback
+        (Spec.map (CommRingCat.ofHom (algebraMap k (AlgebraicClosure k))))
+        (Spec.map (CommRingCat.ofHom (algebraMap k R)))) := by
+        apply IsHomeomorph.irreducibleSpace _ (pullbackSymmetry _
+            (Spec.map (CommRingCat.ofHom (algebraMap k R)))).inv.homeomorph.isHomeomorph
+    let equiv := AlgebraicGeometry.pullbackSpecIso k (AlgebraicClosure k) R
+    let f := equiv.hom
+    let hf : IsHomeomorph f := f.homeomorph.isHomeomorph
+    exact IsHomeomorph.irreducibleSpace f hf
+  · intro h K _ _
+    have irred_pb : IrreducibleSpace ↥(Spec (CommRingCat.of (TensorProduct k K R))) :=
+        (Algebra.GeometricallyIrreducible.irreducibleSpace k R) K
+    let equiv := AlgebraicGeometry.pullbackSpecIso k K R
+    let f := equiv.inv
+    let hf : IsHomeomorph f := f.homeomorph.isHomeomorph
+    have irred_pb' : IrreducibleSpace ↥(pullback
+        (Spec.map (CommRingCat.ofHom (algebraMap k K)))
+        (Spec (CommRingCat.of R) ↘ Spec (CommRingCat.of k)))
+      := IsHomeomorph.irreducibleSpace f hf
+    exact IsHomeomorph.irreducibleSpace _ (pullbackSymmetry _
+        (Spec.map (CommRingCat.ofHom (algebraMap k K)))).inv.homeomorph.isHomeomorph
 
 /-- Every nonempty open subscheme of a geometrically irreducible scheme is geometrically
 irreducible. -/
@@ -71,11 +98,12 @@ lemma of_isOpenImmersion (U : Scheme.{u}) (i : U ⟶ X) [IsOpenImmersion i] [Non
 /-- If `X` is geometrically irreducible over `k` and `U` is an affine open, `Γ(X, U)` is
 geometrically irreducible over `k`. -/
 @[stacks 038G "(1) => (2)"]
-lemma geometricallyIrreducible_of_isAffineOpen (U : X.Opens) (hU : IsAffineOpen U)
-    (hU : U.carrier.Nonempty) :
+lemma geometricallyIrreducible_of_isAffineOpen [GeometricallyIrreducible s]
+    (U : X.Opens) (hU : IsAffineOpen U) (hU : U.carrier.Nonempty) :
     letI : Algebra k Γ(X, U) := algebraOfHomSpec s U
     Algebra.GeometricallyIrreducible k Γ(X, U) :=
   -- use `of_isOpenImmersion` to reduce to the affine case
+  -- Cheni
   sorry
 
 lemma _root_.irreducible_of_openCover {X ι : Type*} [TopologicalSpace X]
@@ -84,7 +112,7 @@ lemma _root_.irreducible_of_openCover {X ι : Type*} [TopologicalSpace X]
     (h : ∀ i, IrreducibleSpace ↥(U i)) :
     IrreducibleSpace X := by
   apply irreducibleComponents_eq_singleton_iff.mp
-  #check exists_mem_irreducibleComponents_subset_of_isIrreducible 
+  #check exists_mem_irreducibleComponents_subset_of_isIrreducible
   sorry
 
 
@@ -127,10 +155,11 @@ lemma of_finite
     GeometricallyIrreducible s :=
   sorry
 
-/-- Being geometrically irreducible can be checked on a separable closure. -/
-lemma of_isSepClosure (K : Type u) [Field K] [Algebra k K] [IsSepClosure k K]
-    [IrreducibleSpace ↑(pullback s (Spec (.of K) ↘ Spec (.of k)))] :
+/-- Being geometrically irreducible can be checked on a separably closed field. -/
+lemma of_isSepClosed (Ω : Type u) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
+    [IrreducibleSpace ↑(pullback s (Spec (.of Ω) ↘ Spec (.of k)))] :
     GeometricallyIrreducible s :=
+  -- Yannis
   sorry
 
 /-- `X` is geometrically irreducible over `s` if and only if `X_K` is irreducible
