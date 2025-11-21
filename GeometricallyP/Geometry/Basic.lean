@@ -6,6 +6,8 @@ Authors: Christian Merten
 import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UnderlyingMap
 import GeometricallyP.Mathlib.CategoryTheory.ObjectProperty.Stability
 import Mathlib.AlgebraicGeometry.Properties
+import GeometricallyP.Algebra.FieldExtensions
+import Mathlib.AlgebraicGeometry.PullbackCarrier
 
 /-!
 # Geometrically-`P` schemes over a field
@@ -124,7 +126,27 @@ lemma iff_of_inheritedFromSource_surjective_of_isPullback [P.InheritedFromSource
     (h : IsPullback fst snd s (Spec (.of k') ↘ Spec (.of k))) :
     Geometrically P snd ↔ Geometrically P s :=
   have : P.IsClosedUnderIsomorphisms := .of_inheritedFromSource _ @Surjective
-  sorry
+    by
+    constructor
+    · intro
+      rw [iff_of_isClosedUnderIsomorphisms]
+      intro K ?_ ?_
+      obtain ⟨M,_,_,_,_,_⟩ := Algebra.exists_field_isScalarTower (k:= k) (K:= k') (L:= K)
+      let XK : Scheme.{u} := pullback s (Spec (CommRingCat.of K) ↘ Spec (CommRingCat.of k))
+      let f : XK ⟶ Spec (CommRingCat.of K) := pullback.snd s
+       (Spec (CommRingCat.of K) ↘ Spec (CommRingCat.of k))
+      let XM : Scheme.{u} := pullback f (Spec (.of M) ↘ Spec (.of K))
+      let a : XM ⟶ XK := pullback.fst f (Spec (.of M) ↘ Spec (.of K))
+      have asurj : Surjective a := by
+        apply MorphismProperty.pullback_fst
+        constructor
+        apply Function.surjective_to_subsingleton
+      have pxm : P XM := by sorry
+      -- make the iso Y x_Spec k' M to XM
+      -- show P (Y x_Spec k' M) from Geometrically P snd
+      -- transport P through the iso
+      apply ObjectProperty.InheritedFromSource.of_hom_of_source a asurj pxm
+    · exact fun _ ↦ of_isPullback s h
 
 end Geometrically
 
