@@ -7,9 +7,11 @@ import GeometricallyP.Geometry.Basic
 import GeometricallyP.Algebra.GeometricallyIrreducible
 import GeometricallyP.Mathlib.Topology.Irreducible
 import GeometricallyP.Mathlib.AlgebraicGeometry.Scheme
-import Mathlib.AlgebraicGeometry.Morphisms.UniversallyOpen
+import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UniversallyOpen
+import Mathlib.AlgebraicGeometry.Fiber
+import Mathlib.Topology.Irreducible
 
-/-!
+/-!f
 # Geometrically irreducible schemes over a field
 
 A scheme `X` over a field `k` is geometrically irreducible if any base change `X_K`
@@ -145,9 +147,46 @@ def irreducibleComponentsOrderIsoPullback [GeometricallyIrreducible s] {Y : Sche
     irreducibleComponents Y ≃o irreducibleComponents ↑(pullback s t) :=
   irreducibleComponentsEquivOfIsPreirreducibleFiber _ (pullback.snd s t).continuous
     -- use `AlgebraicGeometry.universallyOpen_Spec_field`
-    sorry
-    sorry
-    sorry
+    (by
+      have h : UniversallyOpen s := by infer_instance
+      rw [AlgebraicGeometry.universallyOpen_iff] at h
+      have is_pb : IsPullback (pullback.snd s t) (pullback.fst s t) t s := by
+        apply IsPullback.flip
+        exact IsPullback.of_hasPullback _ _
+      exact h (pullback.fst s t) t (pullback.snd s t) is_pb
+    )
+    (by
+      intro p
+      apply IsIrreducible.isPreirreducible
+      let pull_s := pullback.snd s t
+      have : IrreducibleSpace ↥(Scheme.Hom.fiber (pullback.snd s t) p) := by
+        have h : GeometricallyIrreducible s := by infer_instance
+        rw [iff_irreducibleSpace_pullback] at h
+        let kp := Y.residueField p
+        let map := (Y.fromSpecResidueField p) ≫ t
+        obtain ⟨φ, hφ⟩ := Spec.map_surjective map
+        let : Algebra k kp := φ.hom.toAlgebra
+        have := h kp
+        rw [Scheme.Hom.fiber]
+        rw [overHom_Spec_def, RingHom.algebraMap_toAlgebra] at this
+        dsimp at this
+        let e : pullback (pullback.snd s t) (Y.fromSpecResidueField p) ≅ pullback s (Spec.map φ) :=
+          pullbackLeftPullbackSndIso _ _ _ ≪≫ pullback.congrHom rfl hφ.symm
+        let f := e.inv
+        apply IsHomeomorph.irreducibleSpace f f.homeomorph.isHomeomorph
+      let f := AlgebraicGeometry.Scheme.Hom.fiberHomeo (pullback.snd s t) p
+      have irr := IsHomeomorph.irreducibleSpace f f.isHomeomorph
+      exact IsIrreducible.of_subtype _
+    )
+    (by
+      have : Surjective (pullback.snd s t) := by
+        apply MorphismProperty.pullback_snd
+        constructor
+        have : IrreducibleSpace X := by
+          apply Geometrically.prop_self s
+        apply Function.surjective_to_subsingleton
+      exact this.surj
+    )
 
 end GeometricallyIrreducible
 
