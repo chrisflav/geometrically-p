@@ -78,13 +78,29 @@ lemma geometricallyIrreducible_of_isAffineOpen (U : X.Opens) (hU : IsAffineOpen 
   -- use `of_isOpenImmersion` to reduce to the affine case
   sorry
 
+lemma irreducible_of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
+    (hn : ∀ i j, Nonempty ↑(pullback (𝒰.f i) (𝒰.f j)))
+    (h : ∀ i, IrreducibleSpace (𝒰.X i)) :
+    IrreducibleSpace X := by
+  -- irreducibility can be checked on an open cover
+  sorry
+
 /-- If `X` is covered by geometrically irreducible open subschemes with pairwise
 non-empty intersections, `X` is geometrically irreducible. -/
 @[stacks 038G "(4) => (1)"]
 lemma of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
     (hn : ∀ i j, Nonempty ↑(pullback (𝒰.f i) (𝒰.f j)))
     (h : ∀ i, GeometricallyIrreducible (𝒰.f i ≫ s)) :
-    GeometricallyIrreducible s :=
+    GeometricallyIrreducible s := by
+  refine (Geometrically.iff_of_isClosedUnderIsomorphisms s).mpr (fun K _ _ ↦ ?_)
+  let hpo :=
+    Scheme.Pullback.openCoverOfLeft 𝒰 s (Spec (CommRingCat.of K) ↘ Spec (CommRingCat.of k))
+  have hi (i : hpo.I₀) : IrreducibleSpace (hpo.X i) := by
+    simp only [Scheme.Pullback.openCoverOfLeft_X, hpo]
+    apply (Geometrically.iff_of_isClosedUnderIsomorphisms (𝒰.f i ≫ s)).mp (h i)
+  have : Nonempty hpo.I₀ := by simp only [Scheme.Pullback.openCoverOfLeft_I₀, hpo]; infer_instance
+  refine irreducible_of_openCover hpo (fun i j ↦ ?_) hi
+  -- pullback cover has pairwise non-empty intersections
   sorry
 
 /-- Being geometrically irreducible can be checked on finite extensions. -/
