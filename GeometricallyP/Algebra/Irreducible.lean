@@ -227,9 +227,14 @@ lemma PrimeSpectrum.irreducibleSpace_of_isOpenMap_of_dense
   -- use ...
   sorry
 
-def homeomorph_ofClosedDenseEmbedding {X Y : Type*} [TopologicalSpace X]
+noncomputable def homeomorph_ofClosedDenseEmbedding {X Y : Type*} [TopologicalSpace X]
     [TopologicalSpace Y] (f : X → Y) (hfc : Topology.IsClosedEmbedding f)
-    (hfd : DenseRange f) : X ≃ₜ Y := sorry
+    (hfd : DenseRange f) : X ≃ₜ Y := by
+  apply IsHomeomorph.homeomorph f
+  rw [isHomeomorph_iff_continuous_isClosedMap_bijective]
+  refine ⟨hfc.continuous, hfc.isClosedMap, ⟨hfc.injective, ?_⟩⟩
+  rwa [DenseRange, dense_iff_closure_eq, IsClosed.closure_eq, Set.range_eq_univ] at hfd
+  exact hfc.isClosedMap.isClosed_range
 
 lemma geo_reduced_iff_reduce_alg_closed {k R : Type*} [Field k] [IsAlgClosed k]
   [CommRing R] [Algebra k R] [IsReduced R] : IsGeometricallyReduced k R where
