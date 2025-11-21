@@ -106,30 +106,6 @@ lemma geometricallyIrreducible_of_isAffineOpen [GeometricallyIrreducible s]
   -- Cheni
   sorry
 
-lemma _root_.irreducible_of_openCover {X ι : Type*} [TopologicalSpace X] [hι : Nonempty ι]
-    {U : ι → TopologicalSpace.Opens X} (hU : TopologicalSpace.IsOpenCover U)
-    (hn : ∀ i j, ((U i).carrier ∩ (U j).carrier).Nonempty)
-    (h : ∀ i, IrreducibleSpace ↥(U i)) :
-    IrreducibleSpace X := by
-  have h' (i : _) : IsIrreducible (U i).carrier :=
-    IsIrreducible.of_subtype _
-  let i : ι := Classical.choice (α := ι) hι
-  rcases exists_mem_irreducibleComponents_subset_of_isIrreducible (U i).carrier (h' i)
-    with ⟨u, hu, hUu⟩
-  by_cases huniv : u = Set.univ
-  · rw [huniv] at hu
-    exact (irreducibleSpace_def _).mpr hu.1
-  · have huo : IsOpen uᶜ :=
-      IsClosed.isOpen_compl (self := isClosed_of_mem_irreducibleComponents u hu)
-    push_neg at huniv
-    rw [u.ne_univ_iff_exists_notMem] at huniv
-    choose a ha using huniv
-    choose j haj using hU.exists_mem a
-    rcases Set.inter_nonempty_iff_exists_left.mp
-      ((h' j).2 (U i) uᶜ (U i).isOpen huo (hn j i) ⟨a, ⟨haj, ha⟩⟩).right
-      with ⟨x, hx₁, hx₂⟩
-    exfalso; exact hx₂ <| hUu hx₁
-
 lemma irreducible_of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
     (hn : ∀ i j, Nonempty ↑(pullback (𝒰.f i) (𝒰.f j)))
     (h : ∀ i, IrreducibleSpace (𝒰.X i)) :
@@ -137,10 +113,12 @@ lemma irreducible_of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
   -- irreducibility can be checked on an open cover
   have := 𝒰.isOpenCover_opensRange
   have hn' : ∀ i j,
-      ((𝒰.f i).opensRange.carrier ∩ (𝒰.f j).opensRange.carrier).Nonempty := sorry
+      ((𝒰.f i).opensRange.carrier ∩ (𝒰.f j).opensRange.carrier).Nonempty := by
+    
+    sorry
     -- nonempty pullback implies nonempty intersection of subsets
     -- Scheme.Pullback.range_fst_comp
-  refine _root_.irreducible_of_openCover this hn' (fun i ↦ ?_)
+  refine IrreducibleSpace.of_openCover this hn' (fun i ↦ ?_)
   apply (Set.rangeFactorization_surjective (f := (𝒰.f i))).irreducibleSpace
   exact continuous_rangeFactorization_iff.mpr (𝒰.f i).continuous
 
