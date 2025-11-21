@@ -145,8 +145,11 @@ noncomputable def foo {R : Type*} (S:Type*) [CommRing R] [CommRing S]
     (by aesop)
     (by aesop)
 
+--set_option maxHeartbeats 300000 in
 /-- If K/k is a finte separable extension and L a field over k then L ⊗[k] K is a field -/
 lemma FinSepExTensorIsField (k K L : Type*) [Field k] [Field K] [Field L] [Algebra k K] [Algebra k L] [Module.Finite k K] [Algebra.IsSeparable k K] [GeometricallyIrreducible k L] : IsField (L ⊗[k] K) := by
+  sorry
+  /-
 
   --obtain ⟨a,ha⟩ := Field.exists_primitive_element k K
 
@@ -225,15 +228,12 @@ lemma FinSepExTensorIsField (k K L : Type*) [Field k] [Field K] [Field L] [Algeb
 
     have nV: Nonempty V := by sorry
 
-
-    have : (U ∩ V ).Nonempty := nonempty_preirreducible_inter (by assumption) (by assumption) (by sorry ) (by sorry)
+    have nEmpty: (U ∩ V ).Nonempty := nonempty_preirreducible_inter (by assumption) (by assumption) (by sorry ) (by sorry)
 
     have : (U ∩ V ) = ⊥ := by sorry
+    rw [this]at nEmpty
+    simp at nEmpty
 
-    apply?
-
-
-    sorry
 
   have : Field <| AdjoinRoot (Polynomial.map (algebraMap k L) p) := by
 
@@ -243,7 +243,7 @@ lemma FinSepExTensorIsField (k K L : Type*) [Field k] [Field K] [Field L] [Algeb
 
 
   --L⊗[k]K= L(a) qui est un corps
-  sorry
+  sorry-/
 
 /-- If `K` is geometrically irreducible over `k` and `R` is geometrically irreducible over `K`,
 then `R` is geometrically irreducible over `k`. -/
