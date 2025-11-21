@@ -10,6 +10,7 @@ import GeometricallyP.Mathlib.FieldTheory.PurelyInseparable.Basic
 import Mathlib.RingTheory.Flat.TorsionFree
 import Mathlib.RingTheory.Spectrum.Prime.Homeomorph
 import Mathlib.RingTheory.Ideal.Quotient.Nilpotent
+import GeometricallyP.Mathlib.RingTheory.Ideal.Maps
 
 /-!
 # Irreducibility of prime spectrum
@@ -160,11 +161,6 @@ lemma geo_reduced_iff_reduce_alg_closed {k R : Type*} [Field k] [IsAlgClosed k]
         AlgEquiv.trans (Algebra.TensorProduct.congr triv.symm this) (Algebra.TensorProduct.lid k R)
       exact isReduced_of_injective this this.injective
 
--- lemma reduced_tensor_reduced {k S T : Type*} [Field k] [CommRing S] [CommRing T]
---   [Algebra k S] [Algebra k T]
---   : ((S ⧸ nilradical S) ⊗[k] (T ⧸ nilradical T)) ⧸ nilradical (((S ⧸ nilradical S) ⊗[k] (T ⧸ nilradical T)))
---     ≃ₐ[k] (S ⊗[k] T) ⧸ nilradical (S ⊗[k] T) := sorry
-
 @[stacks 00I7 "For algebraically closed fields."]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed [IsAlgClosed k] {S : Type*}
     [CommRing S] [Algebra k S] (hR : IrreducibleSpace (PrimeSpectrum R))
@@ -188,13 +184,11 @@ lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed [IsAlgClosed k
     rw [PrimeSpectrum.denseRange_comap_iff_ker_le_nilRadical, RingHom.algebraMap_toAlgebra,
       RingHom.ker_coe_toRingHom, Algebra.TensorProduct.map_ker]
     simp [Rred, Sred]
-    · -- rw [← Submodule.restrictScalars_self (R:=k) (M:=(R ⊗[k] S)) (Ideal.map TensorProduct.includeLeft (nilradical R)),
-      -- Ideal.map_includeLeft_eq (nilradical R)]
-      apply And.intro
+    · apply And.intro
       · rw [← RingHom.ker_coe_toRingHom]
-        simp
-        sorry
-      · sorry
+        simpa using Ideal.map_nilradical_le _
+      · rw [← RingHom.ker_coe_toRingHom]
+        simpa using Ideal.map_nilradical_le _
     · apply Ideal.Quotient.mk_surjective
     · apply Ideal.Quotient.mk_surjective
 
