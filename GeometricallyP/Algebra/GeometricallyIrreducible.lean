@@ -6,7 +6,6 @@ Authors: Christian Merten
 import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 import Mathlib.FieldTheory.IsSepClosed
 import Mathlib.RingTheory.Spectrum.Prime.Topology
-import GeometricallyP.Mathlib.Topology.Homeomorph.Lemmas
 import GeometricallyP.Algebra.Irreducible
 
 /-!
@@ -57,9 +56,6 @@ theorem of_forall_irreducibleSpace_of_isSeparable
     (H : ∀ (K : Type u) [Field K] [Algebra k K] [Module.Finite k K] [Algebra.IsSeparable k K],
       IrreducibleSpace (PrimeSpectrum (K ⊗[k] R))) :
     Algebra.GeometricallyIrreducible k R := by
-  /-
-  uses `PrimeSpectrum.irreducibleSpace_of_isSeparable` and `iff_irreducibleSpace_separableClosure`
-  -/
   rw [iff_irreducibleSpace_separableClosure]
   exact PrimeSpectrum.irreducibleSpace_of_isSeparable H (SeparableClosure k)
 
@@ -73,8 +69,7 @@ theorem irreducibleSpace [Algebra.GeometricallyIrreducible k R]
     Algebra.TensorProduct.rightAlgebra
   let : Algebra K (K ⊗[k] AlgebraicClosure k) :=
     Algebra.TensorProduct.leftAlgebra
-
-  obtain ⟨m, mm⟩ := Ideal.exists_maximal (K ⊗[k] AlgebraicClosure k)
+  obtain ⟨m, _⟩ := Ideal.exists_maximal (K ⊗[k] AlgebraicClosure k)
   let F :=  (K ⊗[k] AlgebraicClosure k) ⧸ m
   let : Field F := Ideal.Quotient.field m
   let : Algebra (K ⊗[k] R) (F ⊗[k] R) := RingHom.toAlgebra <| AlgHom.toRingHom <|
@@ -83,13 +78,12 @@ theorem irreducibleSpace [Algebra.GeometricallyIrreducible k R]
     rw [← geometricallyIrreducible_iff]
     infer_instance
   let hF : IrreducibleSpace (PrimeSpectrum F) := inferInstance
-  let : IrreducibleSpace (PrimeSpectrum
-    (F ⊗[AlgebraicClosure k] (AlgebraicClosure k ⊗[k] R))) :=
+  let : IrreducibleSpace (PrimeSpectrum (F ⊗[AlgebraicClosure k] (AlgebraicClosure k ⊗[k] R))) :=
       PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed (k:=AlgebraicClosure k) hF hR
-  let homeo : PrimeSpectrum (F ⊗[AlgebraicClosure k] (AlgebraicClosure k ⊗[k] R)) ≃ₜ PrimeSpectrum (F ⊗[k] R) :=
-    PrimeSpectrum.homeomorphOfRingEquiv
+  let homeo : PrimeSpectrum (F ⊗[AlgebraicClosure k] (AlgebraicClosure k ⊗[k] R)) ≃ₜ
+    PrimeSpectrum (F ⊗[k] R) := PrimeSpectrum.homeomorphOfRingEquiv
       (Algebra.TensorProduct.cancelBaseChange k (AlgebraicClosure k) (AlgebraicClosure k) F R)
-  have : IrreducibleSpace (PrimeSpectrum (F ⊗[k] R)) := IsHomeomorph.irreducibleSpace homeo.toFun (Homeomorph.isHomeomorph homeo)
+  have : IrreducibleSpace (PrimeSpectrum (F ⊗[k] R)) := homeo.isHomeomorph.irreducibleSpace
   exact PrimeSpectrum.irreducibleSpace_of_isScalarTower K F
 
 /-- If `Ω` is a separably closed extension of `k` such that `Spec (Ω ⊗[k] R)` is irreducible,

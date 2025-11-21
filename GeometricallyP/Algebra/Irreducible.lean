@@ -5,9 +5,16 @@ Authors: Christian Merten
 -/
 import GeometricallyP.Algebra.TensorProduct
 import GeometricallyP.Mathlib.Topology.Homeomorph.Lemmas
+import GeometricallyP.Mathlib.RingTheory.Nilpotent.GeometricallyReduced
 import GeometricallyP.Mathlib.FieldTheory.PurelyInseparable.Basic
+import GeometricallyP.Mathlib.RingTheory.Spectrum.Prime.RingHom
 import Mathlib.RingTheory.Flat.TorsionFree
 import Mathlib.RingTheory.Spectrum.Prime.Homeomorph
+import Mathlib.RingTheory.Ideal.Quotient.Nilpotent
+import GeometricallyP.Mathlib.RingTheory.Ideal.Maps
+import Mathlib.RingTheory.Spectrum.Prime.Jacobson
+import Mathlib.RingTheory.Spectrum.Prime.Chevalley
+import Mathlib.RingTheory.FiniteStability
 
 /-!
 # Irreducibility of prime spectrum
@@ -114,20 +121,97 @@ lemma PrimeSpectrum.irreducibleSpace_iff_of_isAlgClosure_of_isSepClosed
   (irreducibleSpace_iff_of_ringEquiv (Algebra.TensorProduct.lid k R).symm.toRingEquiv).trans
     (irreducibleSpace_iff_of_isAlgClosure_of_isSepClosure k R k L)
 
-@[stacks 00I7 "For domains of finite type over `k`."]
+noncomputable def PrimeSpectrum.algEquiv_residueField_of_isAlgClosed
+    [IsAlgClosed k] [Algebra.FiniteType k R]
+    (p : PrimeSpectrum R) [hp : p.asIdeal.IsMaximal] :
+    k ≃ₐ[k] p.asIdeal.ResidueField :=
+  let e₁ :=
+    (AlgEquiv.ofBijective _ p.asIdeal.bijective_algebraMap_quotient_residueField).restrictScalars k
+  let : Field (R ⧸ p.asIdeal) := Ideal.Quotient.field _
+  have : Module.Finite k (R ⧸ p.asIdeal) :=
+    finite_of_finite_type_of_isJacobsonRing k (R ⧸ p.asIdeal)
+  let e₀ : k ≃ₐ[k] (R ⧸ p.asIdeal) :=
+    (AlgEquiv.ofBijective (ofId _ _) IsAlgClosed.algebraMap_bijective_of_isIntegral)
+  e₀.trans e₁
+
+open TensorProduct in
+@[stacks 00I7 "For algebras of finite type over `k`."]
 private lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux [IsAlgClosed k]
-    {S : Type*} [CommRing S] [Algebra k S] [Algebra.FiniteType k S]
-    [IsDomain S] [Algebra.FiniteType k R] [IsDomain R]
+    {S : Type*} [CommRing S] [Algebra k S]
+    [Algebra.FiniteType k R] [Algebra.FiniteType k S]
     (hR : IrreducibleSpace (PrimeSpectrum R))
     (hS : IrreducibleSpace (PrimeSpectrum S)) :
-    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
-  sorry
+    IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) where
+  isPreirreducible_univ := by
+    have : IsJacobsonRing R := isJacobsonRing_of_finiteType (A := k)
+    have hc : closure (closedPoints (PrimeSpectrum R)) = Set.univ := closure_closedPoints
+    have h := hR.isIrreducible_univ.isPreirreducible.preimage_of_dense_isPreirreducible_fiber
+      (X := PrimeSpectrum (R ⊗[k] S))
+      (f := comap <| (algebraMap R (R ⊗[k] S)))
+    simp only [Set.univ_inter, Set.univ_subset_iff, Set.preimage_univ] at h
+    apply h
+    · have : FinitePresentation R (R ⊗[k] S) :=
+        have : IsNoetherianRing R := Algebra.FiniteType.isNoetherianRing k R
+        FinitePresentation.of_finiteType.mp (inferInstance)
+      apply isOpenMap_comap_of_hasGoingDown_of_finitePresentation
+    · rw [← dense_iff_closure_eq] at hc ⊢
+      refine hc.mono (fun p hp ↦ ?_)
+      rw [mem_closedPoints_iff, isClosed_singleton_iff_isMaximal p] at hp
+      have : IrreducibleSpace (PrimeSpectrum ((R ⊗[k] S) ⊗[R] p.asIdeal.ResidueField)) :=
+        let e₀ : (p.asIdeal.ResidueField ⊗[R] (R ⊗[k] S)) ≃+* (p.asIdeal.ResidueField ⊗[k] S) :=
+          (cancelBaseChange _ _ R _ _).toRingEquiv
+        let e₁ : (p.asIdeal.ResidueField ⊗[k] S) ≃+* S :=
+          (Algebra.TensorProduct.congr (algEquiv_residueField_of_isAlgClosed p).symm
+            AlgEquiv.refl).trans (Algebra.TensorProduct.lid k S)
+        (irreducibleSpace_iff_of_ringEquiv <|
+          (Algebra.TensorProduct.comm R _ p.asIdeal.ResidueField).toRingEquiv.trans <|
+          e₀.trans e₁).mpr hS
+      simpa [comap, preimage_eq_range_tensor_residueField R (R ⊗[k] S) p] using
+        this.isPreirreducible_univ.image _ <| continuousOn_univ.mpr (comap _).continuous_toFun
+  toNonempty :=
+    have := (irreducibleSpace_iff.mp hR).1
+    have := (irreducibleSpace_iff.mp hS).1
+    have := nontrivial_of_algebraMap_injective_of_flat_left k R S (RingHom.injective _)
+    inferInstance
+
+lemma minimalPrimes_eq_singleton_nilradical {R : Type*} [CommRing R]
+    [IrreducibleSpace (PrimeSpectrum R)] :
+    minimalPrimes R = {nilradical R} := by
+  have : (minimalPrimes R).Nonempty ∧ (minimalPrimes R).Subsingleton := by
+    constructor
+    · have : Nontrivial R := by
+        exact (PrimeSpectrum.irreducibleSpace_iff.mp inferInstance).1
+      have h : (⊥ : Ideal R) ≠ ⊤ := by
+        exact bot_ne_top
+      rw [← Set.nonempty_coe_sort]
+      exact Ideal.nonempty_minimalPrimes h
+    · exact (PrimeSpectrum.irreducibleSpace_iff.mp inferInstance).2
+  rw [← Set.exists_eq_singleton_iff_nonempty_subsingleton] at this
+  obtain ⟨I, hI⟩ := this
+  rw [hI, Set.singleton_eq_singleton_iff, nilradical, Submodule.zero_eq_bot,
+    ← Ideal.sInf_minimalPrimes, ← minimalPrimes, hI]
+  simp
 
 /-- A ring is a domain if and only if it is reduced and its prime spectrum
 is irreducible. -/
 lemma isDomain_iff_isReduced_and_irreducibleSpace {R : Type*} [CommRing R] :
-    IsDomain R ↔ IsReduced R ∧ IrreducibleSpace (PrimeSpectrum R) :=
-  sorry
+    IsDomain R ↔ IsReduced R ∧ IrreducibleSpace (PrimeSpectrum R) := by
+  constructor
+  · intro h
+    constructor
+    · infer_instance
+    exact PrimeSpectrum.irreducibleSpace
+  · intro h
+    obtain ⟨hred, hirr⟩ := h
+    have h1 : (minimalPrimes R) = {(⊥ : Ideal R)} := by
+      rw [minimalPrimes_eq_singleton_nilradical]
+      simp
+    have h_in : (⊥ : Ideal R) ∈ (minimalPrimes R) := by
+      rw [h1]
+      simp
+    have hbp2 :(⊥ : Ideal R).IsPrime := by
+      apply Ideal.minimalPrimes_isPrime (h_in)
+    exact IsDomain.of_bot_isPrime R
 
 /-- If `Spec R` is irreducible and `S` is an `R`-algebra such that the induced
 map `Spec S → Spec R` is open and for a dense set of primes `p` of `R`, the fibre
@@ -143,19 +227,88 @@ lemma PrimeSpectrum.irreducibleSpace_of_isOpenMap_of_dense
   -- use ...
   sorry
 
+def homeomorph_ofClosedDenseEmbedding {X Y : Type*} [TopologicalSpace X]
+    [TopologicalSpace Y] (f : X → Y) (hfc : Topology.IsClosedEmbedding f)
+    (hfd : DenseRange f) : X ≃ₜ Y := sorry
+
+lemma geo_reduced_iff_reduce_alg_closed {k R : Type*} [Field k] [IsAlgClosed k]
+  [CommRing R] [Algebra k R] [IsReduced R] : IsGeometricallyReduced k R where
+    isReduced_algebraicClosure_tensorProduct := by
+      let triv : k ≃ₐ[k] AlgebraicClosure k :=
+        AlgEquiv.ofBijective (Algebra.ofId k (AlgebraicClosure k))
+        (IsAlgClosed.algebraMap_bijective_of_isIntegral (k := k) (K := (AlgebraicClosure k)))
+      let : R ≃ₐ[k] R := AlgEquiv.refl
+      have : (AlgebraicClosure k ⊗[k] R) ≃ₐ[k] R :=
+        AlgEquiv.trans (Algebra.TensorProduct.congr triv.symm this) (Algebra.TensorProduct.lid k R)
+      exact isReduced_of_injective this this.injective
+
 @[stacks 00I7 "For algebraically closed fields."]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed [IsAlgClosed k] {S : Type*}
     [CommRing S] [Algebra k S] (hR : IrreducibleSpace (PrimeSpectrum R))
-    (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) :=
-  -- Use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux`.
-  -- To replace `R` and `S` by their reductions use
-  -- `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux`
-  -- and `PrimeSpectrum.isClosedEmbedding_comap_of_surjective`.
-  -- Then use `isDomain_iff_isReduced_and_irreducibleSpace`
-  -- and `Algebra.IsGeometricallyReduced.isReduced_tensorProduct`.
-  -- Finally, use `isDomain_tensorProduct_of_forall_isDomain_of_FG`
-  -- to reduce to `Algebra.FiniteType k R` and `Algebra.FiniteType k S`
-  sorry
+    (hS : IrreducibleSpace (PrimeSpectrum S)) : IrreducibleSpace (PrimeSpectrum (R ⊗[k] S)) := by
+  letI Rred := R ⧸ nilradical R
+  letI Sred := S ⧸ nilradical S
+  let : Algebra (R ⊗[k] S) (Rred ⊗[k] Sred) := RingHom.toAlgebra <|
+    Algebra.TensorProduct.map (IsScalarTower.toAlgHom k R Rred) (IsScalarTower.toAlgHom k S Sred)
+  let : IsReduced Rred := by
+    rw [← Ideal.isRadical_iff_quotient_reduced]
+    exact Ideal.radical_isRadical ⊥
+  let : IsReduced Sred := by
+    rw [← Ideal.isRadical_iff_quotient_reduced]
+    exact Ideal.radical_isRadical ⊥
+
+  let denseR : DenseRange ⇑(PrimeSpectrum.comap (algebraMap R Rred)) := by
+    simp [PrimeSpectrum.denseRange_comap_iff_ker_le_nilRadical, Rred]
+  let denseS : DenseRange ⇑(PrimeSpectrum.comap (algebraMap S Sred)) := by
+    simp [PrimeSpectrum.denseRange_comap_iff_ker_le_nilRadical, Sred]
+  let denseRtS : DenseRange ⇑(PrimeSpectrum.comap (algebraMap (R ⊗[k] S) (Rred ⊗[k] Sred))) := by
+    rw [PrimeSpectrum.denseRange_comap_iff_ker_le_nilRadical, RingHom.algebraMap_toAlgebra,
+      RingHom.ker_coe_toRingHom, Algebra.TensorProduct.map_ker]
+    · simp [Rred, Sred]
+      · apply And.intro
+        · rw [← RingHom.ker_coe_toRingHom]
+          simpa using Ideal.map_nilradical_le _
+        · rw [← RingHom.ker_coe_toRingHom]
+          simpa using Ideal.map_nilradical_le _
+    · apply Ideal.Quotient.mk_surjective
+    · apply Ideal.Quotient.mk_surjective
+
+  let homeoR : PrimeSpectrum Rred ≃ₜ PrimeSpectrum R :=
+    (homeomorph_ofClosedDenseEmbedding ⇑(PrimeSpectrum.comap (algebraMap R Rred))
+      (PrimeSpectrum.isClosedEmbedding_comap_of_surjective Rred (algebraMap R Rred)
+        Ideal.Quotient.mk_surjective)
+      denseR)
+  let homeoS : PrimeSpectrum Sred ≃ₜ PrimeSpectrum S :=
+    (homeomorph_ofClosedDenseEmbedding ⇑(PrimeSpectrum.comap (algebraMap S Sred))
+      (PrimeSpectrum.isClosedEmbedding_comap_of_surjective Sred (algebraMap S Sred)
+        Ideal.Quotient.mk_surjective)
+      denseS)
+  let homeoRredtSred : PrimeSpectrum (Rred ⊗[k] Sred) ≃ₜ PrimeSpectrum (R ⊗[k] S) :=
+    (homeomorph_ofClosedDenseEmbedding
+      ⇑(PrimeSpectrum.comap (algebraMap (R ⊗[k] S) (Rred ⊗[k] Sred)))
+      (PrimeSpectrum.isClosedEmbedding_comap_of_surjective (Rred ⊗[k] Sred)
+        (algebraMap (R ⊗[k] S) (Rred ⊗[k] Sred)) ?_)
+      denseRtS)
+  · let : IrreducibleSpace (PrimeSpectrum Rred) := homeoR.symm.isHomeomorph.irreducibleSpace
+    let : IrreducibleSpace (PrimeSpectrum Sred) := homeoS.symm.isHomeomorph.irreducibleSpace
+    let : IsDomain Rred := by
+      rw [isDomain_iff_isReduced_and_irreducibleSpace]
+      exact ⟨inferInstance, inferInstance⟩
+    let : IsDomain Sred := by
+      rw [isDomain_iff_isReduced_and_irreducibleSpace]
+      exact ⟨inferInstance, inferInstance⟩
+    let domain : IsDomain (Rred ⊗[k] Sred) := isDomain_tensorProduct_of_forall_isDomain_of_FG ?_
+    · exact homeoRredtSred.isHomeomorph.irreducibleSpace
+    intro S T Sfg Tfg
+    have : Algebra.FiniteType k S := by simp [← Subalgebra.fg_iff_finiteType, Sfg]
+    have : Algebra.FiniteType k T := by simp [← Subalgebra.fg_iff_finiteType, Tfg]
+    rw [isDomain_iff_isReduced_and_irreducibleSpace]
+    have : IsGeometricallyReduced k T := geo_reduced_iff_reduce_alg_closed
+    have : IsReduced (S ⊗[k] T) := Algebra.IsGeometricallyReduced.isReduced_tensorProduct
+    exact ⟨inferInstance,
+      PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed_aux inferInstance inferInstance⟩
+  · rw [RingHom.algebraMap_toAlgebra]
+    exact TensorProduct.map_surjective (Ideal.Quotient.mk_surjective) (Ideal.Quotient.mk_surjective)
 
 @[stacks 00I7]
 lemma PrimeSpectrum.irreducibleSpace_tensorProduct_of_isSepClosed [IsSepClosed k] {S : Type*}
