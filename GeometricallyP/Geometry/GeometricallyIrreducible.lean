@@ -10,7 +10,7 @@ import GeometricallyP.Mathlib.AlgebraicGeometry.Scheme
 import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UniversallyOpen
 import Mathlib.AlgebraicGeometry.Fiber
 
-/-!f
+/-!
 # Geometrically irreducible schemes over a field
 
 A scheme `X` over a field `k` is geometrically irreducible if any base change `X_K`
