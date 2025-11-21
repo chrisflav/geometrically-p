@@ -83,6 +83,8 @@ lemma irreducible_of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
     (h : ∀ i, IrreducibleSpace (𝒰.X i)) :
     IrreducibleSpace X := by
   -- irreducibility can be checked on an open cover
+  have := 𝒰.isOpenCover_opensRange
+  have hn' : ∀ i j, Nonempty (sorry) := sorry
   sorry
 
 /-- If `X` is covered by geometrically irreducible open subschemes with pairwise
