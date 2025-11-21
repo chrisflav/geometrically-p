@@ -106,18 +106,16 @@ lemma geometricallyIrreducible_of_isAffineOpen [GeometricallyIrreducible s]
   -- Cheni
   sorry
 
+/-- Irreducibility of a scheme can be checked on an open cover
+with pairwise non-empty intersections. -/
 lemma irreducible_of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
     (hn : ∀ i j, Nonempty ↑(pullback (𝒰.f i) (𝒰.f j)))
     (h : ∀ i, IrreducibleSpace (𝒰.X i)) :
     IrreducibleSpace X := by
-  -- irreducibility can be checked on an open cover
   have := 𝒰.isOpenCover_opensRange
-  have hn' : ∀ i j,
+  have hn' (i j : _) :
       ((𝒰.f i).opensRange.carrier ∩ (𝒰.f j).opensRange.carrier).Nonempty := by
-    
-    sorry
-    -- nonempty pullback implies nonempty intersection of subsets
-    -- Scheme.Pullback.range_fst_comp
+    simp [← Scheme.Pullback.range_fst_comp, Set.range_nonempty]
   refine IrreducibleSpace.of_openCover this hn' (fun i ↦ ?_)
   apply (Set.rangeFactorization_surjective (f := (𝒰.f i))).irreducibleSpace
   exact continuous_rangeFactorization_iff.mpr (𝒰.f i).continuous
@@ -137,7 +135,7 @@ lemma of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
     apply (Geometrically.iff_of_isClosedUnderIsomorphisms (𝒰.f i ≫ s)).mp (h i)
   have : Nonempty hpo.I₀ := by simp only [Scheme.Pullback.openCoverOfLeft_I₀, hpo]; infer_instance
   refine irreducible_of_openCover hpo (fun i j ↦ ?_) hi
-  -- pullback cover has pairwise non-empty intersections
+  -- Remains only to show that the pullback cover `hpo` has pairwise non-empty intersections.
   sorry
 
 /-- Being geometrically irreducible can be checked on finite extensions. -/
