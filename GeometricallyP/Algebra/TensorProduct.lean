@@ -5,6 +5,7 @@ import Mathlib.RingTheory.Spectrum.Prime.Topology
 import Mathlib.RingTheory.Ideal.GoingDown
 import Mathlib.RingTheory.RingHom.Flat
 import Mathlib.RingTheory.IsAdjoinRoot
+import Mathlib.RingTheory.HopkinsLevitzki
 
 /-!
 # Auxiliary results on tensor products
@@ -297,3 +298,23 @@ lemma IsReduced.of_isAdjoinRoot_of_squareFree {R S : Type*} [CommRing R]
   obtain (rfl | hne) := eq_or_ne n 0
   · exact hn.trans (one_dvd x)
   · rwa [hp.dvd_pow_iff_dvd hne] at hn
+
+lemma Ideal.isMaximal_comap_iff_of_surjective {R S : Type*} [CommRing R] [CommRing S]
+    (f : R →+* S) (hf : Function.Surjective f)
+    (I : Ideal S) : (I.comap f).IsMaximal ↔ I.IsMaximal := by
+  have heq : comap f I = RingHom.ker ((Ideal.Quotient.mk (I := I)).comp f) := by
+    simp [← RingHom.comap_ker]
+  let e : R ⧸ comap f I ≃+* S ⧸ I :=
+    RingEquiv.trans (Ideal.quotEquivOfEq heq)
+      (RingHom.quotientKerEquivOfSurjective <| Ideal.Quotient.mk_surjective.comp hf)
+  rw [Ideal.Quotient.maximal_ideal_iff_isField_quotient,
+    Ideal.Quotient.maximal_ideal_iff_isField_quotient]
+  exact ⟨fun h ↦ e.symm.isField h, fun h ↦ e.isField h⟩
+
+lemma IsAdjoinRoot.isArtinianRing_of_field {k R : Type*} [Field k] [CommRing R] [Algebra k R]
+    (p : Polynomial k) (h : IsAdjoinRoot R p) (hp : p ≠ 0) : IsArtinianRing R := by
+  have : IsNoetherianRing R := isNoetherianRing_of_surjective _ _ _ h.map_surjective
+  rw [isArtinianRing_iff_krullDimLE_zero]
+  refine Ring.KrullDimLE.mk₀ fun I hI ↦ ?_
+  rw [← Ideal.isMaximal_comap_iff_of_surjective _ h.map_surjective]
+  exact IsPrime.to_maximal_ideal fun h ↦ hp (eq_bot_iff.mp h <| by simp)
