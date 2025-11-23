@@ -129,15 +129,55 @@ lemma geometricallyIrreducible_of_isAffineOpen [GeometricallyIrreducible s]
       simp [this] at irred
       exact irred
 
+/-- Irreducibility of a scheme can be checked on an open cover
+with pairwise non-empty intersections. -/
+lemma irreducible_of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
+    (hn : ∀ i j, Nonempty ↑(pullback (𝒰.f i) (𝒰.f j)))
+    (h : ∀ i, IrreducibleSpace (𝒰.X i)) :
+    IrreducibleSpace X := by
+  have := 𝒰.isOpenCover_opensRange
+  have hn' (i j : _) :
+      ((𝒰.f i).opensRange.carrier ∩ (𝒰.f j).opensRange.carrier).Nonempty := by
+    simp [← Scheme.Pullback.range_fst_comp, Set.range_nonempty]
+  refine IrreducibleSpace.of_openCover this hn' (fun i ↦ ?_)
+  apply (Set.rangeFactorization_surjective (f := (𝒰.f i))).irreducibleSpace
+  exact continuous_rangeFactorization_iff.mpr (𝒰.f i).continuous
+
+theorem _root_.nonempty_pullback_baseChange_of_surjective
+    {X U₁ U₂ S S' : Scheme.{u}} (s : X ⟶ S)
+    (f₁ : U₁ ⟶ X) (f₂ : U₂ ⟶ X) -- [IsOpenImmersion f₁] [IsOpenImmersion f₂]
+    (hn : Nonempty ↥(pullback f₁ f₂))
+    (g : S' ⟶ S) [hg : Surjective g] :
+    Nonempty ↥(pullback
+      (pullback.map (f₁ ≫ s) g s g f₁ (𝟙 S') (𝟙 S) (by simp) (by simp))
+      (pullback.map (f₂ ≫ s) g s g f₂ (𝟙 S') (𝟙 S) (by simp) (by simp))) :=
+  have : Surjective (pullback.fst (pullback.fst f₁ f₂ ≫ f₁ ≫ s) g) := inferInstance
+  ⟨pullback.lift
+    (pullback.map _ _ _ _ (pullback.fst f₁ f₂) (𝟙 _) (𝟙 _) (by simp) (by simp))
+    (pullback.map _ _ _ _ (pullback.snd f₁ f₂) (𝟙 _) (𝟙 _)
+      (by simp [← Category.assoc, pullback.condition]) (by simp))
+    (by simp [pullback.map_comp, pullback.condition])
+    (this.surj hn.some).choose⟩
+
 /-- If `X` is covered by geometrically irreducible open subschemes with pairwise
 non-empty intersections, `X` is geometrically irreducible. -/
 @[stacks 038G "(4) => (1)"]
 lemma of_openCover (𝒰 : X.OpenCover) [Nonempty 𝒰.I₀]
     (hn : ∀ i j, Nonempty ↑(pullback (𝒰.f i) (𝒰.f j)))
     (h : ∀ i, GeometricallyIrreducible (𝒰.f i ≫ s)) :
-    GeometricallyIrreducible s :=
-  -- Bryan
-  sorry
+    GeometricallyIrreducible s := by
+  refine (Geometrically.iff_of_isClosedUnderIsomorphisms s).mpr (fun K _ _ ↦ ?_)
+  let hpo :=
+    Scheme.Pullback.openCoverOfLeft 𝒰 s (Spec (CommRingCat.of K) ↘ Spec (CommRingCat.of k))
+  have hi (i : hpo.I₀) : IrreducibleSpace (hpo.X i) := by
+    simp only [Scheme.Pullback.openCoverOfLeft_X, hpo]
+    apply (Geometrically.iff_of_isClosedUnderIsomorphisms (𝒰.f i ≫ s)).mp (h i)
+  have : Nonempty hpo.I₀ := by simp only [Scheme.Pullback.openCoverOfLeft_I₀, hpo]; infer_instance
+  refine irreducible_of_openCover hpo (fun i j ↦ ?_) hi
+  -- Remains only to show that the pullback cover `hpo` has pairwise non-empty intersections.
+  apply nonempty_pullback_baseChange_of_surjective s (𝒰.f i) (𝒰.f j) (hn i j)
+    (Spec (CommRingCat.of K) ↘ Spec (CommRingCat.of k))
+    (hg := (surjective_iff _).mpr <| Function.surjective_to_subsingleton _)
 
 /-- Being geometrically irreducible can be checked on finite extensions. -/
 lemma of_finite
