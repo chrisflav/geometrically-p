@@ -5,6 +5,7 @@ Authors: Christian Merten
 -/
 import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 import Mathlib.FieldTheory.IsSepClosed
+import Mathlib.FieldTheory.LinearDisjoint
 import Mathlib.RingTheory.Spectrum.Prime.Topology
 import GeometricallyP.Algebra.Irreducible
 
@@ -86,6 +87,15 @@ theorem irreducibleSpace [Algebra.GeometricallyIrreducible k R]
   have : IrreducibleSpace (PrimeSpectrum (F ⊗[k] R)) := homeo.isHomeomorph.irreducibleSpace
   exact PrimeSpectrum.irreducibleSpace_of_isScalarTower K F
 
+/-- If `R` is geometrically irreducible over `k`, for every field extension `K` of `k`, the
+prime spectrum `Spec (K ⊗[k] R)` is irreducible. -/
+theorem irreducibleSpace' [Algebra.GeometricallyIrreducible k R]
+    (K : Type*) [Field K] [Algebra k K] :
+    IrreducibleSpace (PrimeSpectrum (R ⊗[k] K)) := by
+  rw [PrimeSpectrum.homeomorphOfRingEquiv (Algebra.TensorProduct.comm _ _ _).toRingEquiv
+        |>.isHomeomorph.irreducibleSpace_iff]
+  exact irreducibleSpace _ _ _
+
 /-- If `Ω` is a separably closed extension of `k` such that `Spec (Ω ⊗[k] R)` is irreducible,
 `R` is geometrically irreducible over `k`. -/
 theorem of_irreducibleSpace_of_isSepClosed (Ω : Type*) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
@@ -96,14 +106,43 @@ theorem of_irreducibleSpace_of_isSepClosed (Ω : Type*) [Field Ω] [Algebra k Ω
     (IsSepClosed.lift : (SeparableClosure k →ₐ[k] Ω)).toAlgebra
   apply PrimeSpectrum.irreducibleSpace_of_isScalarTower (SeparableClosure k) Ω
 
+/-- If K/k is a finte separable extension and L a geometrically irreducible field over k
+then L ⊗[k] K is a field -/
+lemma isField_tensorProduct_of_isSeparable (k K L : Type*) [Field k] [Field K] [Field L]
+    [Algebra k K] [Algebra k L] [Module.Finite k K] [Algebra.IsSeparable k K]
+    [GeometricallyIrreducible k L] :
+    IsField (L ⊗[k] K) := by
+  obtain ⟨a, ha⟩ := Field.exists_primitive_element k K
+  have h : IsAdjoinRoot (L ⊗[k] K) _ :=
+    (IsAdjoinRoot.mkOfPrimitiveElement (IsIntegral.isIntegral a) ha).tensorProduct
+  have : IsDomain (L ⊗[k] K) := by
+    rw [isDomain_iff_isReduced_and_irreducibleSpace]
+    refine ⟨?_, irreducibleSpace' k L K⟩
+    exact .of_isAdjoinRoot_of_squareFree _ h
+      (Polynomial.Separable.map (IsSeparable.isSeparable' a)).squarefree
+  have : IsArtinianRing (L ⊗[k] K) := by
+    refine IsAdjoinRoot.isArtinianRing_of_field _ h ?_
+    exact (map_ne_zero_iff (Polynomial.mapRingHom (algebraMap k L))
+      (Polynomial.map_injective _ <| FaithfulSMul.algebraMap_injective k L)).mpr <|
+      minpoly.ne_zero_of_finite k a
+  exact IsArtinianRing.isField_of_isDomain (L ⊗[k] K)
+
 /-- If `K` is geometrically irreducible over `k` and `R` is geometrically irreducible over `K`,
 then `R` is geometrically irreducible over `k`. -/
 @[stacks 0G30]
 lemma trans (K : Type*) [Field K] [Algebra k K] [Algebra K R] [IsScalarTower k K R]
     [GeometricallyIrreducible k K] [GeometricallyIrreducible K R] :
-    GeometricallyIrreducible k R :=
-  -- Yannis
-  sorry
+    GeometricallyIrreducible k R := by
+  refine of_forall_irreducibleSpace_of_isSeparable _ _ fun k' _ _ _ _ ↦ ?_
+  let K' := K ⊗[k] k'
+  let : Algebra k' K' := TensorProduct.rightAlgebra
+  have cb : (K' ⊗[K] R) ≃+* k' ⊗[k] R :=
+    (Algebra.TensorProduct.comm K K' R).toRingEquiv.trans <|
+      (Algebra.TensorProduct.cancelBaseChange k K K R k').toRingEquiv.trans
+      (Algebra.TensorProduct.comm k R k').toRingEquiv
+  rw [← ((PrimeSpectrum.homeomorphOfRingEquiv cb)).isHomeomorph.irreducibleSpace_iff]
+  let : Field K' := (isField_tensorProduct_of_isSeparable k k' K).toField
+  exact irreducibleSpace K R K'
 
 /-- Let `K` over k` be a field extension. Then `K` is geometrically irreducible over `k`
 if and only if every `k`-separable, algebraic element `x : K` is contained in `k`. -/
