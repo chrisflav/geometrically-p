@@ -106,27 +106,6 @@ theorem of_irreducibleSpace_of_isSepClosed (Ω : Type*) [Field Ω] [Algebra k Ω
     (IsSepClosed.lift : (SeparableClosure k →ₐ[k] Ω)).toAlgebra
   apply PrimeSpectrum.irreducibleSpace_of_isScalarTower (SeparableClosure k) Ω
 
---this should be somewhere right?
-lemma IsFieldOfIsoField (K L : Type*) [Field K] [Ring L] (e : K ≃+* L) : IsField L := by
-  constructor
-  · use e.toFun 0, e.toFun 1
-    intro h
-    have : (0:K)= (1:K) := by
-      rw [← e.left_inv 0, h, e.left_inv 1]
-    grind-- a bit overkill right? i could'nt find better
-  · intro x y
-    rw [← e.right_inv x, ← e.right_inv y, ← e.map_mul', mul_comm, e.map_mul']
-  · intro a ha
-    use e.toFun ((e.invFun a) ⁻¹)
-    slice_lhs 1 1 => rw [← e.right_inv a]
-    rw [ ← e.map_mul']
-    have : e.invFun a ≠ 0 := by
-      suffices e.symm a ≠ 0 by
-        exact this
-      apply  (RingEquiv.map_ne_zero_iff _).2 ha
-    rw [Field.mul_inv_cancel _ this, ← RingEquiv.map_one e]
-    rfl
-
 /-- If K/k is a finte separable extension and L a geometrically irreducible field over k
 then L ⊗[k] K is a field -/
 lemma isField_tensorProduct_of_isSeparable (k K L : Type*) [Field k] [Field K] [Field L]
