@@ -36,7 +36,8 @@ the above. The reason for choosing this definition is that it does not quantify 
 -/
 @[stacks 037L, mk_iff]
 class GeometricallyIrreducible (k R : Type*) [Field k] [CommRing R] [Algebra k R] : Prop where
-  irreducibleSpace_tensorProduct : IrreducibleSpace (PrimeSpectrum (AlgebraicClosure k ⊗[k] R))
+  irreducibleSpace_tensorProduct :
+    IrreducibleSpace (PrimeSpectrum (AlgebraicClosure k ⊗[k] R))
 
 namespace GeometricallyIrreducible
 
@@ -55,30 +56,46 @@ lemma iff_irreducibleSpace_separableClosure :
 theorem of_forall_irreducibleSpace_of_isSeparable
     (H : ∀ (K : Type u) [Field K] [Algebra k K] [Module.Finite k K] [Algebra.IsSeparable k K],
       IrreducibleSpace (PrimeSpectrum (K ⊗[k] R))) :
-    Algebra.GeometricallyIrreducible k R :=
-  /-
-  uses `PrimeSpectrum.irreducibleSpace_of_isSeparable` and `iff_irreducibleSpace_separableClosure`
-  -/
-  sorry
+    Algebra.GeometricallyIrreducible k R := by
+  rw [iff_irreducibleSpace_separableClosure]
+  exact PrimeSpectrum.irreducibleSpace_of_isSeparable H (SeparableClosure k)
 
 /-- If `R` is geometrically irreducible over `k`, for every field extension `K` of `k`, the
 prime spectrum `Spec (K ⊗[k] R)` is irreducible. -/
 @[stacks 037K "(4) => (1)"]
 theorem irreducibleSpace [Algebra.GeometricallyIrreducible k R]
     (K : Type*) [Field K] [Algebra k K] :
-    IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) :=
-  -- uses `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed`
-  sorry
+    IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) := by
+  let : Algebra (AlgebraicClosure k) (K ⊗[k] AlgebraicClosure k) :=
+    Algebra.TensorProduct.rightAlgebra
+  let : Algebra K (K ⊗[k] AlgebraicClosure k) :=
+    Algebra.TensorProduct.leftAlgebra
+  obtain ⟨m, _⟩ := Ideal.exists_maximal (K ⊗[k] AlgebraicClosure k)
+  let F :=  (K ⊗[k] AlgebraicClosure k) ⧸ m
+  let : Field F := Ideal.Quotient.field m
+  let : Algebra (K ⊗[k] R) (F ⊗[k] R) := RingHom.toAlgebra <| AlgHom.toRingHom <|
+    Algebra.TensorProduct.map (IsScalarTower.toAlgHom k K F) (AlgHom.id k R)
+  let hR : IrreducibleSpace (PrimeSpectrum (AlgebraicClosure k ⊗[k] R)) := by
+    rw [← geometricallyIrreducible_iff]
+    infer_instance
+  let hF : IrreducibleSpace (PrimeSpectrum F) := inferInstance
+  let : IrreducibleSpace (PrimeSpectrum (F ⊗[AlgebraicClosure k] (AlgebraicClosure k ⊗[k] R))) :=
+      PrimeSpectrum.irreducibleSpace_tensorProduct_of_isAlgClosed (k:=AlgebraicClosure k) hF hR
+  let homeo : PrimeSpectrum (F ⊗[AlgebraicClosure k] (AlgebraicClosure k ⊗[k] R)) ≃ₜ
+    PrimeSpectrum (F ⊗[k] R) := PrimeSpectrum.homeomorphOfRingEquiv
+      (Algebra.TensorProduct.cancelBaseChange k (AlgebraicClosure k) (AlgebraicClosure k) F R)
+  have : IrreducibleSpace (PrimeSpectrum (F ⊗[k] R)) := homeo.isHomeomorph.irreducibleSpace
+  exact PrimeSpectrum.irreducibleSpace_of_isScalarTower K F
 
 /-- If `Ω` is a separably closed extension of `k` such that `Spec (Ω ⊗[k] R)` is irreducible,
 `R` is geometrically irreducible over `k`. -/
 theorem of_irreducibleSpace_of_isSepClosed (Ω : Type*) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
     (H : IrreducibleSpace (PrimeSpectrum (Ω ⊗[k] R))) :
-    Algebra.GeometricallyIrreducible k R :=
-  /-
-  use `iff_irreducibleSpace_separableClosure` and `PrimeSpectrum.irreducibleSpace_of_isScalarTower`
-  -/
-  sorry
+    Algebra.GeometricallyIrreducible k R := by
+  rw [iff_irreducibleSpace_separableClosure]
+  let h : Algebra (SeparableClosure k) Ω :=
+    (IsSepClosed.lift : (SeparableClosure k →ₐ[k] Ω)).toAlgebra
+  apply PrimeSpectrum.irreducibleSpace_of_isScalarTower (SeparableClosure k) Ω
 
 --this should be somewhere right?
 lemma IsFieldOfIsoField (K L : Type*) [Field K] [Ring L] (e : K ≃+* L) : IsField L := by
