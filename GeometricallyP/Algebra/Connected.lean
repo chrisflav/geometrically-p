@@ -21,6 +21,27 @@ variable {k : Type u} {R : Type*} [Field k] [CommRing R] [Algebra k R]
 abbrev idempotents (R : Type*) [Mul R] : Set R :=
   { e | IsIdempotentElem e}
 
+lemma aux0 {R} [CommRing R] : {0,1} ⊆ idempotents R := by
+    intro e he
+    simp only [Set.mem_setOf_eq]
+    obtain h1|h2 := he
+    · rw [h1]
+      exact IsIdempotentElem.zero
+    · rw [h2]
+      exact IsIdempotentElem.one
+
+lemma aux : (∀ e : R, IsIdempotentElem e → e = 0 ∨ e = 1) ↔ idempotents R = {0,1} := by
+    constructor
+    · intro h
+      ext e ; constructor
+      · intro he; simpa using h e he
+      · apply aux0
+    · intro h
+      rw [Set.ext_iff] at h
+      intro e he
+      specialize h e
+      exact h.mp he
+
 /-- If every idempotent is trivial, then `Spec R` is connected. -/
 lemma PrimeSpectrum.preconnectedSpace_of_forall_isIdempotentElem
     (H : ∀ e : R, IsIdempotentElem e → e = 0 ∨ e = 1) :
@@ -64,28 +85,32 @@ lemma PrimeSpectrum.preconnectedSpace_iff_idempotents_eq :
             exact h2
           exact (IsUnit.mul_eq_left h3).mp he
         simp
-    · intro e
-      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_setOf_eq]
-      intro h
-      obtain h1|h2 := h
-      · rw [h1]
-        exact IsIdempotentElem.zero
-      · rw [h2]
-        exact IsIdempotentElem.one
+    · exact aux0
   · apply PrimeSpectrum.preconnectedSpace_of_forall_isIdempotentElem
     intro e he
     have : e ∈ ({0,1} : Set R) := by rwa [← h]
     simpa using this
 
-lemma PrimeSpectrum.connectedSpace_of_forall_connectedSpace_of_isSeparable
+lemma trivial_idempotents_of_forall_isSeparable
     (H : ∀ (K : Type v) [Field K] [Algebra k K] [Module.Finite k K] [Algebra.IsSeparable k K],
-      ConnectedSpace (PrimeSpectrum (K ⊗[k] R)))
+      (idempotents (K ⊗[k] R) = {0, 1})) (Ω : Type v) [Field Ω] [Algebra k Ω]
+      [Algebra.IsSeparable k Ω] : (idempotents (Ω ⊗[k] R) = {0, 1}) := by
+      apply aux.mp
+      have H1 : ∀ (K : Type v) [Field K] [Algebra k K] [Module.Finite k K]
+        [Algebra.IsSeparable k K], ∀ (e : K ⊗[k] R), IsIdempotentElem e → e = 0 ∨ e = 1 := by
+        intro K _ _ _ _
+        specialize H K
+        exact aux.2 H
+      exact eq_zero_or_eq_one_of_isIdempotentElem_of_forall_isSeparable H1 _
+
+lemma PrimeSpectrum.preconnectedSpace_of_forall_connectedSpace_of_isSeparable
+    (H : ∀ (K : Type v) [Field K] [Algebra k K] [Module.Finite k K] [Algebra.IsSeparable k K],
+      PreconnectedSpace (PrimeSpectrum (K ⊗[k] R)))
     (Ω : Type v) [Field Ω] [Algebra k Ω] [Algebra.IsSeparable k Ω] :
-    ConnectedSpace (PrimeSpectrum (Ω ⊗[k] R)) :=
-  /-
-  Use `eq_zero_or_eq_one_of_isIdempotentElem_of_forall_isSeparable`
-  -/
-  sorry
+    PreconnectedSpace (PrimeSpectrum (Ω ⊗[k] R)) := by
+    apply PrimeSpectrum.preconnectedSpace_iff_idempotents_eq.mpr
+    simp_rw [PrimeSpectrum.preconnectedSpace_iff_idempotents_eq] at H
+    exact trivial_idempotents_of_forall_isSeparable H Ω
 
 @[stacks 037R]
 lemma PrimeSpectrum.connectedSpace_tensorProduct_of_isSepClosed [IsSepClosed k] {S : Type*}
