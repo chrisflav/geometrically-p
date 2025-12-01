@@ -317,3 +317,41 @@ lemma IsAdjoinRoot.isArtinianRing_of_field {k R : Type*} [Field k] [CommRing R] 
   refine Ring.KrullDimLE.mk₀ fun I hI ↦ ?_
   rw [← Ideal.isMaximal_comap_iff_of_surjective _ h.map_surjective]
   exact IsPrime.to_maximal_ideal fun h ↦ hp (eq_bot_iff.mp h <| by simp)
+
+section
+
+variable (R S : Type*) [CommRing R] [CommRing S]
+  [Algebra R S]
+variable (A B : Type*) [CommRing A] [CommRing B]
+    [Algebra R A] [Algebra R B] [Algebra A B] [IsScalarTower R A B]
+
+local instance : Algebra (A ⊗[R] S) (B ⊗[R] S) :=
+  RingHom.toAlgebra <| AlgHom.toRingHom <|
+    Algebra.TensorProduct.map (IsScalarTower.toAlgHom R A B) (AlgHom.id R S)
+
+local instance : IsScalarTower A (A ⊗[R] S) (B ⊗[R] S) :=
+  IsScalarTower.of_algebraMap_eq (congrFun rfl)
+
+attribute [local instance] Algebra.TensorProduct.rightAlgebra in
+lemma Algebra.IsPushout.tensorProduct_tensorProduct :
+    Algebra.IsPushout A (A ⊗[R] S) B (B ⊗[R] S) := by
+  let e' : B ⊗[A] (A ⊗[R] S) ≃ₐ[B] B ⊗[R] S :=
+    Algebra.TensorProduct.cancelBaseChange _ _ _ _ _
+  have : IsScalarTower R (A ⊗[R] S) (B ⊗[A] (A ⊗[R] S)) := by
+    apply IsScalarTower.of_algebraMap_eq
+    intro x
+    simp [TensorProduct.right_algebraMap_apply, IsScalarTower.algebraMap_apply R A B x,
+      TensorProduct.tmul_one_eq_one_tmul]
+  have : (e'.toAlgHom.restrictScalars R).comp
+      (IsScalarTower.toAlgHom R (A ⊗[R] S) (B ⊗[A] (A ⊗[R] S))) =
+        IsScalarTower.toAlgHom _ _ _ := by
+    ext <;> simp [e', RingHom.algebraMap_toAlgebra, Algebra.smul_def]
+  let e : B ⊗[A] (A ⊗[R] S) ≃ₐ[A ⊗[R] S] B ⊗[R] S := by
+    apply AlgEquiv.ofRingEquiv (f := e'.toRingEquiv)
+    intro x
+    exact congr($this x)
+  apply Algebra.IsPushout.of_equiv e
+  ext
+  simp [e, e', Algebra.TensorProduct.one_def]
+
+end
