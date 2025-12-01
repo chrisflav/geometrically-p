@@ -86,17 +86,23 @@ lemma PrimeSpectrum.connectedSpace_tensorProduct_of_isSepClosed [IsSepClosed k] 
   -- use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isSepClosed`
   sorry
 
-lemma PrimeSpectrum.connectedSpace_of_faithfullyFlat {S : Type*} [CommRing S] [Algebra R S]
+lemma PrimeSpectrum.connectedSpace_of_faithfullyFlat (S : Type*) [CommRing S] [Algebra R S]
     [Module.FaithfullyFlat R S] [ConnectedSpace (PrimeSpectrum S)] :
     ConnectedSpace (PrimeSpectrum R) :=
-  /-
-  use `PrimeSpectrum.specComap_surjective_of_faithfullyFlat`
-  -/
-  sorry
+  PrimeSpectrum.specComap_surjective_of_faithfullyFlat.connectedSpace
+    (PrimeSpectrum.comap (algebraMap R S)).continuous
 
 lemma PrimeSpectrum.connectedSpace_of_isScalarTower (K L : Type*) [Field K] [Field L]
     [Algebra k K] [Algebra k L] [Algebra K L] [IsScalarTower k K L]
     [ConnectedSpace (PrimeSpectrum (L ⊗[k] R))] :
-    ConnectedSpace (PrimeSpectrum (K ⊗[k] R)) :=
-  -- uses `PrimeSpectrum.connectedSpace_of_faithfullyFlat`
-  sorry
+    ConnectedSpace (PrimeSpectrum (K ⊗[k] R)) := by
+  let f := Algebra.TensorProduct.map (IsScalarTower.toAlgHom k K L) (AlgHom.id k R)
+  let algebra := RingHom.toAlgebra <| AlgHom.toRingHom <| f
+  let g : L →ₐ[K] L ⊗[k] R := IsScalarTower.toAlgHom _ _ _
+  have h : IsScalarTower K (K ⊗[k] R) (L ⊗[k] R) :=
+    IsScalarTower.of_algebraMap_eq (congrFun rfl)
+  have : IsBaseChange (K ⊗[k] R) g.toLinearMap := by
+    rw [← Algebra.isPushout_iff]
+    apply Algebra.IsPushout.tensorProduct_tensorProduct
+  have : Module.FaithfullyFlat (K ⊗[k] R) (L ⊗[k] R) := .of_isBaseChange this
+  exact PrimeSpectrum.connectedSpace_of_faithfullyFlat (L ⊗[k] R)

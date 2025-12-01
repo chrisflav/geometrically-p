@@ -345,7 +345,6 @@ lemma PrimeSpectrum.irreducibleSpace_of_isScalarTower (K L : Type*) [Field K] [F
     [Algebra k K] [Algebra k L] [Algebra K L] [IsScalarTower k K L]
     [IrreducibleSpace (PrimeSpectrum (L ⊗[k] R))] :
     IrreducibleSpace (PrimeSpectrum (K ⊗[k] R)) := by
-  -- uses `PrimeSpectrum.irreducibleSpace_of_faithfullyFlat`
   let f := Algebra.TensorProduct.map (IsScalarTower.toAlgHom k K L) (AlgHom.id k R)
   let algebra := RingHom.toAlgebra <| AlgHom.toRingHom <| f
 
@@ -353,27 +352,7 @@ lemma PrimeSpectrum.irreducibleSpace_of_isScalarTower (K L : Type*) [Field K] [F
   have h : IsScalarTower K (K ⊗[k] R) (L ⊗[k] R) := IsScalarTower.of_algebraMap_eq (congrFun rfl)
   have : IsBaseChange (K ⊗[k] R) g.toLinearMap := by
     rw [← Algebra.isPushout_iff]
-    let e' : L ⊗[K] (K ⊗[k] R) ≃ₐ[L] L ⊗[k] R := by
-      apply Algebra.TensorProduct.cancelBaseChange
-    have : IsScalarTower k (K ⊗[k] R) (L ⊗[K] (K ⊗[k] R)) := by
-      apply IsScalarTower.of_algebraMap_eq
-      intro x
-      simp [TensorProduct.right_algebraMap_apply]
-      rw [IsScalarTower.algebraMap_apply k K L x, TensorProduct.tmul_one_eq_one_tmul]
-      simp
-    have : (e'.toAlgHom.restrictScalars k).comp
-        (IsScalarTower.toAlgHom k (K ⊗[k] R) (L ⊗[K] (K ⊗[k] R))) =
-        IsScalarTower.toAlgHom _ _ _ := by
-      ext
-      · simp [e', RingHom.algebraMap_toAlgebra, f, Algebra.smul_def]
-      simp [e', RingHom.algebraMap_toAlgebra, f, Algebra.smul_def]
-    let e : L ⊗[K] (K ⊗[k] R) ≃ₐ[K ⊗[k] R] L ⊗[k] R := by
-      apply AlgEquiv.ofRingEquiv (f := e'.toRingEquiv)
-      intro x
-      exact congr($this x)
-    apply Algebra.IsPushout.of_equiv e
-    ext
-    simp [e, e', Algebra.TensorProduct.one_def]
+    apply Algebra.IsPushout.tensorProduct_tensorProduct
   have : Module.FaithfullyFlat (K ⊗[k] R) (L ⊗[k] R) := by
     apply Module.FaithfullyFlat.of_isBaseChange this
   apply PrimeSpectrum.irreducibleSpace_of_faithfullyFlat (L ⊗[k] R)
