@@ -43,8 +43,9 @@ variable (k : Type u) (R : Type*) [CommRing R] [Field k] [Algebra k R]
 
 lemma iff_connectedSpace_separableClosure :
     GeometricallyConnected k R ↔
-      ConnectedSpace (PrimeSpectrum (SeparableClosure k ⊗[k] R)) :=
-  sorry
+      ConnectedSpace (PrimeSpectrum (SeparableClosure k ⊗[k] R)) := by
+      rw [geometricallyConnected_iff]
+      exact (PrimeSpectrum.connectedSpace_iff_of_isAlgClosure_of_isSepClosure _ _ _ _).symm
 
 /-- If `Spec (K ⊗[k] R)` is connected for every finite separable extension `K` of `k`, then
 `R` is geometrically connected over `k`. -/

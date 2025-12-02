@@ -71,6 +71,10 @@ lemma PrimeSpectrum.preconnectedSpace_iff_idempotents_subset :
     intro e he
     exact h he
 
+lemma PrimeSpectrum.connectedSpace_iff_idempotents_subset [Nontrivial R]:
+    ConnectedSpace (PrimeSpectrum R) ↔ idempotents R ⊆ {0, 1} := by
+    sorry
+
 lemma PrimeSpectrum.preconnectedSpace_of_forall_connectedSpace_of_isSeparable
     (H : ∀ (K : Type v) [Field K] [Algebra k K] [Module.Finite k K] [Algebra.IsSeparable k K],
       PreconnectedSpace (PrimeSpectrum (K ⊗[k] R)))
@@ -85,6 +89,23 @@ lemma PrimeSpectrum.connectedSpace_tensorProduct_of_isSepClosed [IsSepClosed k] 
     (hS : ConnectedSpace (PrimeSpectrum S)) : ConnectedSpace (PrimeSpectrum (R ⊗[k] S)) :=
   -- use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isSepClosed`
   sorry
+
+lemma PrimeSpectrum.connectedSpace_iff_of_isPurelyInseparable
+    (k R : Type*) [CommRing R] [Field k] [Algebra k R]
+    (K : Type*) [Field K] [Algebra k K]
+    (L : Type*) [Field L] [Algebra k L] [Algebra K L] [IsScalarTower k K L]
+    [IsPurelyInseparable K L] :
+    ConnectedSpace (PrimeSpectrum (K ⊗[k] R)) ↔ ConnectedSpace (PrimeSpectrum (L ⊗[k] R)) := by
+  have e := isHomeomorph_comap_tensorProductMap_of_isPurelyInseparable K k R L
+  refine ⟨fun h ↦ (e.homeomorph).symm.isHomeomorph.connectedSpace, fun h ↦ e.connectedSpace⟩
+--alternatively directly use Function.Surjective.connectedSpace hf.surjective hf.continuous
+
+lemma PrimeSpectrum.connectedSpace_iff_of_isAlgClosure_of_isSepClosure
+    (k R : Type*) [CommRing R] [Field k] [Algebra k R]
+    (K : Type*) [Field K] [Algebra k K] [IsSepClosure k K]
+    (L : Type*) [Field L] [Algebra k L] [IsAlgClosure k L] :
+    ConnectedSpace (PrimeSpectrum (K ⊗[k] R)) ↔ ConnectedSpace (PrimeSpectrum (L ⊗[k] R)) := by sorry
+
 
 lemma PrimeSpectrum.connectedSpace_of_faithfullyFlat (S : Type*) [CommRing S] [Algebra R S]
     [Module.FaithfullyFlat R S] [ConnectedSpace (PrimeSpectrum S)] :
