@@ -103,6 +103,7 @@ lemma of_isSepClosed (Ω : Type u) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
     [IrreducibleSpace ↑(pullback s (Spec (.of Ω) ↘ Spec (.of k)))] :
     GeometricallyIrreducible s := by
 
+
       have : Nonempty X := by
         apply Nonempty.intro
         let h : IrreducibleSpace _ := by assumption
@@ -112,21 +113,22 @@ lemma of_isSepClosed (Ω : Type u) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
         apply Scheme.Cover.nonempty_of_nonempty X.affineCover
 
       have : IrreducibleSpace X := by
-        #check  IsIrreducible.image
         let f := (pullback.fst s  (Spec (.of Ω) ↘ Spec (.of k))).base.hom'.toFun
+        apply Function.Surjective.irreducibleSpace f
 
-        have : f '' ⊤ = X.carrier.carrier := by sorry
+        · apply ContinuousMap.continuous_toFun
+        · --suffices Epi (pullback.fst s  (Spec (.of Ω) ↘ Spec (.of k))) by sorry
+          --apply CategoryTheory.Abelian.epi_pullback_of_epi_g
 
-        --#check @IsHomeomorph.irreducibleSpace _ _ _ _ _ _ (irreducibleSpace_def.2 <| IsIrreducible.image _ f _)
-
-        #check IsIrreducible.image _ f _
-
-        sorry
+          #check Spec.map_surjective
+          sorry
 
       apply of_openCover s X.affineCover
       · intro i j
         have : Nonempty <| X.affineCover.X i := by
           apply Nonempty.intro
+
+
           sorry
         have : Nonempty <| X.affineCover.X j := by sorry
 
@@ -145,6 +147,7 @@ lemma of_isSepClosed (Ω : Type u) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
         have : IrreducibleSpace (pullback (Spec.map φ) (Spec (CommRingCat.of Ω) ↘ Spec (CommRingCat.of k))).carrier.carrier := by
           have : GeometricallyIrreducible <| Spec.map φ := by
             rw [hφ]
+
             #check IsPreirreducible.open_subset
             --apply AlgebraicGeometry.GeometricallyIrreducible.of_isOpenImmersion
             sorry
@@ -155,27 +158,24 @@ lemma of_isSepClosed (Ω : Type u) [Field Ω] [Algebra k Ω] [IsSepClosed Ω]
 
         refine @IsHomeomorph.irreducibleSpace (pullback (Spec.map φ) (Spec (CommRingCat.of Ω) ↘ Spec (CommRingCat.of k))).carrier.carrier _ _ _ _ (Homeomorph.isHomeomorph ?_) _
 
+
         --let  : PrimeSpectrum Ω ≅ (Spec (CommRingCat.of (TensorProduct k Ω _))) := by
           --exact Iso.refl (PrimeSpectrum Ω)
           --sorry
         --apply (_).trans _
         --apply Homeomorph.trans
+        --apply Scheme.homeOfIso
+        --#check Scheme.homeoOfIso
+        #check PrimeSpectrum (TensorProduct k Ω _)
+        #check (AlgebraicGeometry.pullbackSpecIso k _ Ω)
 
-        #check (Scheme.homeoOfIso <| (AlgebraicGeometry.pullbackSpecIso k _ Ω)).trans
+        refine (Scheme.homeoOfIso <| (AlgebraicGeometry.pullbackSpecIso k _ Ω)).trans ?_
+
+
 
 
 
         #check (Scheme.homeoOfIso <| (AlgebraicGeometry.pullbackSpecIso k Ω _).trans <| Iso.refl <| (Spec (CommRingCat.of (TensorProduct k Ω _))))
-
-
-
-
-
-
-
-
-
-
 
 
         sorry
