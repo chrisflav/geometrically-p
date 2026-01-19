@@ -198,11 +198,11 @@ for `K` a separable closure of `k`. -/
 theorem iff_irreducibleSpace_separableClosure :
     GeometricallyIrreducible s ↔
       IrreducibleSpace ↑(pullback s (Spec (.of <| SeparableClosure k) ↘ Spec (.of k))) := by
-      constructor
-      · intro h
-        rw [iff_irreducibleSpace_pullback] at h
-        exact h (SeparableClosure k)
-      · apply of_isSepClosed s
+    constructor
+    · intro h
+      rw [iff_irreducibleSpace_pullback] at h
+      exact h (SeparableClosure k)
+    · apply of_isSepClosed s
 
 /-- If `X` is geometrically irreducible over `k` and `Y` is any `k`-scheme, then
 `X ×[k] Y ⟶ Y` induces an order preserving bijection between irreducible components. -/
