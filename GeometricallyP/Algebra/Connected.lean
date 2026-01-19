@@ -74,13 +74,13 @@ lemma PrimeSpectrum.preconnectedSpace_iff_idempotents_subset :
 -- a version for nontrivial rings
 lemma PrimeSpectrum.connectedSpace_iff_idempotents_subset [Nontrivial R]:
     ConnectedSpace (PrimeSpectrum R) ↔ idempotents R ⊆ {0, 1} := by
+  constructor
+  · intro h
+    exact preconnectedSpace_iff_idempotents_subset.mp h.toPreconnectedSpace
+  · intro h
+    apply preconnectedSpace_iff_idempotents_subset.mpr at h
     constructor
-    · intro h
-      exact preconnectedSpace_iff_idempotents_subset.mp h.toPreconnectedSpace
-    · intro h
-      apply preconnectedSpace_iff_idempotents_subset.mpr at h
-      constructor
-      infer_instance
+    infer_instance
 
 lemma PrimeSpectrum.connectedSpace_iff_of_ringEquiv
     {R S : Type*} [CommSemiring R] [CommSemiring S]
