@@ -132,7 +132,7 @@ lemma PrimeSpectrum.connectedSpace_of_faithfullyFlat (S : Type*) [CommRing S] [A
     [Module.FaithfullyFlat R S] [ConnectedSpace (PrimeSpectrum S)] :
     ConnectedSpace (PrimeSpectrum R) :=
   PrimeSpectrum.specComap_surjective_of_faithfullyFlat.connectedSpace
-  (PrimeSpectrum.comap (algebraMap R S)).continuous
+    (PrimeSpectrum.comap (algebraMap R S)).continuous
 
 lemma PrimeSpectrum.connectedSpace_of_isScalarTower (K L : Type*) [Field K] [Field L]
     [Algebra k K] [Algebra k L] [Algebra K L] [IsScalarTower k K L]
