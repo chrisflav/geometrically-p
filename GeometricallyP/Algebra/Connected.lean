@@ -13,7 +13,7 @@ In this file we show some results on connectedness of the prime spectrum of a ri
 
 universe v u
 
-open TensorProduct Algebra
+open TensorProduct Algebra PrimeSpectrum
 
 variable {k : Type u} {R : Type*} [Field k] [CommRing R] [Algebra k R]
 
@@ -71,6 +71,24 @@ lemma PrimeSpectrum.preconnectedSpace_iff_idempotents_subset :
     intro e he
     exact h he
 
+-- a version for nontrivial rings
+lemma PrimeSpectrum.connectedSpace_iff_idempotents_subset [Nontrivial R]:
+    ConnectedSpace (PrimeSpectrum R) ↔ idempotents R ⊆ {0, 1} := by
+  constructor
+  · intro h
+    exact preconnectedSpace_iff_idempotents_subset.mp h.toPreconnectedSpace
+  · intro h
+    apply preconnectedSpace_iff_idempotents_subset.mpr at h
+    constructor
+    infer_instance
+
+lemma PrimeSpectrum.connectedSpace_iff_of_ringEquiv
+    {R S : Type*} [CommSemiring R] [CommSemiring S]
+    (e : R ≃+* S) :
+    ConnectedSpace (PrimeSpectrum R) ↔ ConnectedSpace (PrimeSpectrum S) :=
+  ⟨fun _ ↦ (PrimeSpectrum.homeomorphOfRingEquiv e).isHomeomorph.connectedSpace,
+  fun _ ↦ (PrimeSpectrum.homeomorphOfRingEquiv e.symm).isHomeomorph.connectedSpace⟩
+
 lemma PrimeSpectrum.preconnectedSpace_of_forall_connectedSpace_of_isSeparable
     (H : ∀ (K : Type v) [Field K] [Algebra k K] [Module.Finite k K] [Algebra.IsSeparable k K],
       PreconnectedSpace (PrimeSpectrum (K ⊗[k] R)))
@@ -85,6 +103,30 @@ lemma PrimeSpectrum.connectedSpace_tensorProduct_of_isSepClosed [IsSepClosed k] 
     (hS : ConnectedSpace (PrimeSpectrum S)) : ConnectedSpace (PrimeSpectrum (R ⊗[k] S)) :=
   -- use `PrimeSpectrum.irreducibleSpace_tensorProduct_of_isSepClosed`
   sorry
+
+lemma PrimeSpectrum.connectedSpace_iff_of_isPurelyInseparable
+    (k R : Type*) [CommRing R] [Field k] [Algebra k R]
+    (K : Type*) [Field K] [Algebra k K]
+    (L : Type*) [Field L] [Algebra k L] [Algebra K L] [IsScalarTower k K L]
+    [IsPurelyInseparable K L] :
+    ConnectedSpace (PrimeSpectrum (K ⊗[k] R)) ↔ ConnectedSpace (PrimeSpectrum (L ⊗[k] R)) := by
+  have e := isHomeomorph_comap_tensorProductMap_of_isPurelyInseparable K k R L
+  refine ⟨fun h ↦ (e.homeomorph).symm.isHomeomorph.connectedSpace, fun h ↦ e.connectedSpace⟩
+
+lemma PrimeSpectrum.connectedSpace_iff_of_isAlgClosure_of_isSepClosure
+    (k R : Type*) [CommRing R] [Field k] [Algebra k R]
+    (K : Type*) [Field K] [Algebra k K] [IsSepClosure k K]
+    (L : Type*) [Field L] [Algebra k L] [IsAlgClosure k L] :
+    ConnectedSpace (PrimeSpectrum (K ⊗[k] R)) ↔ ConnectedSpace (PrimeSpectrum (L ⊗[k] R)) := by
+  obtain ⟨inst, _, h⟩ := exists_algebra_isPurelyInseparable_of_isSepClosure_of_isAlgClosure k K L
+  rw [connectedSpace_iff_of_isPurelyInseparable k R K L]
+
+lemma PrimeSpectrum.connectedSpace_iff_of_isAlgClosure_of_isSepClosed
+    (k R : Type*) [CommRing R] [Field k] [Algebra k R] [IsSepClosed k]
+    (L : Type*) [Field L] [Algebra k L] [IsAlgClosure k L] :
+     ConnectedSpace (PrimeSpectrum R) ↔  ConnectedSpace (PrimeSpectrum (L ⊗[k] R)) :=
+  (connectedSpace_iff_of_ringEquiv (Algebra.TensorProduct.lid k R).symm.toRingEquiv).trans
+  (connectedSpace_iff_of_isAlgClosure_of_isSepClosure k R k L)
 
 lemma PrimeSpectrum.connectedSpace_of_faithfullyFlat (S : Type*) [CommRing S] [Algebra R S]
     [Module.FaithfullyFlat R S] [ConnectedSpace (PrimeSpectrum S)] :

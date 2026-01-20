@@ -12,3 +12,8 @@ lemma IsHomeomorph.irreducibleSpace_iff {X Y : Type*} [TopologicalSpace X]
     IrreducibleSpace X ↔ IrreducibleSpace Y :=
   ⟨fun _ ↦ hf.irreducibleSpace,
     fun _ ↦ hf.homeomorph.symm.isHomeomorph.irreducibleSpace⟩
+
+lemma IsHomeomorph.connectedSpace {X Y : Type*} [TopologicalSpace X]
+    [TopologicalSpace Y] (f : X → Y) (hf : IsHomeomorph f)
+    [ConnectedSpace X] : ConnectedSpace Y :=
+  Function.Surjective.connectedSpace hf.surjective hf.continuous
