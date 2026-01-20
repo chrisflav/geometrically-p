@@ -171,11 +171,6 @@ lemma iff_of_inheritedFromSource_surjective_of_isPullback [P.InheritedFromSource
     refine .trans ?_ (Spec.map_comp _ _)
     rfl
 
-
-
-
-
-
 end Geometrically
 
 end AlgebraicGeometry
