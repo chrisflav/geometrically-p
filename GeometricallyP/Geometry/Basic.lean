@@ -6,6 +6,7 @@ Authors: Christian Merten
 import GeometricallyP.Mathlib.AlgebraicGeometry.Morphisms.UnderlyingMap
 import GeometricallyP.Mathlib.CategoryTheory.ObjectProperty.Stability
 import Mathlib.AlgebraicGeometry.Properties
+import Mathlib.AlgebraicGeometry.PullbackCarrier
 
 /-!
 # Geometrically-`P` schemes over a field
@@ -22,6 +23,7 @@ for a field extension `K` of `k`.
 universe u
 
 open CategoryTheory Limits
+open TensorProduct
 
 namespace AlgebraicGeometry
 
@@ -122,9 +124,57 @@ Then `Geometrically P` is invariant under scalar extensions.
 lemma iff_of_inheritedFromSource_surjective_of_isPullback [P.InheritedFromSource @Surjective]
     {k' : Type u} [Field k'] [Algebra k k'] {Y : Scheme.{u}} {fst : Y ⟶ X} {snd : Y ⟶ Spec (.of k')}
     (h : IsPullback fst snd s (Spec (.of k') ↘ Spec (.of k))) :
-    Geometrically P snd ↔ Geometrically P s :=
-  have : P.IsClosedUnderIsomorphisms := .of_inheritedFromSource _ @Surjective
-  sorry
+    Geometrically P snd ↔ Geometrically P s := by
+  have closed_under_iso : P.IsClosedUnderIsomorphisms := .of_inheritedFromSource _ @Surjective
+  repeat rw [geometrically_iff]
+  constructor
+  · intro h' k'' _ _ X'' fst'' snd'' h''
+    -- Construct common field extension of k' and k''
+    let tensor_prod := k' ⊗[k] k''
+    have : Nontrivial tensor_prod := by apply Module.FaithfullyFlat.lTensor_nontrivial
+    obtain ⟨M, hM⟩ := Ideal.exists_maximal tensor_prod
+    let k''' := tensor_prod ⧸ M
+    let : Field k''' := Ideal.Quotient.field M
+
+    -- Construct maps between the Specs
+    let inr : k'' →ₐ tensor_prod := Algebra.TensorProduct.includeRight
+    let : Algebra k'' k''' := Algebra.compHom k''' inr.toRingHom
+    let specMap''' := Spec (.of k''') ↘ Spec (.of k')
+    let specMap'''' := Spec (.of k''') ↘ Spec (.of k'')
+
+    -- Construct the common pullback
+    let X''' := pullback snd specMap'''
+    let X'''' := pullback snd'' specMap''''
+    have PX''' := h' k''' X''' (pullback.fst snd specMap''')
+      (pullback.snd snd specMap''') (IsPullback.of_hasPullback _ _)
+    have : X''' ≅ X'''' := sorry -- This is pretty tedious to show. I don't know how to do this properly
+
+    -- Use the other pullback square to propagate P to X'' along the surjective morphism
+    have PX'''' := closed_under_iso.of_iso this PX'''
+    let g := pullback.fst snd'' specMap''''
+    have : Surjective g := by
+      have is_pb : IsPullback (pullback.snd snd'' specMap'''') g
+          (Spec (.of k''') ↘ Spec (.of k'')) snd'' := by
+        apply IsPullback.flip
+        apply IsPullback.of_hasPullback _ _
+      have surj : Surjective (Spec (.of k''') ↘ Spec (.of k'')) := by
+        apply (surjective_iff _).mpr
+        apply Function.surjective_to_subsingleton
+      have : MorphismProperty.IsStableUnderBaseChange @Surjective := by infer_instance
+      apply this.of_isPullback is_pb surj
+    apply (_ : P.InheritedFromSource @Surjective).of_hom_of_source g this PX''''
+    assumption -- this should ideally be moved into the line above
+  · intro h' k'' _ _ Y' fst' snd' h''
+    let : Algebra k k'' := Algebra.compHom k'' (algebraMap k k')
+    refine h' k'' Y' (fst' ≫ fst) snd' ?_
+    convert IsPullback.paste_horiz h'' h
+    refine .trans ?_ (Spec.map_comp _ _)
+    rfl
+
+
+
+
+
 
 end Geometrically
 
