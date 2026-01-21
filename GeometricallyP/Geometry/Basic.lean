@@ -126,9 +126,11 @@ lemma iff_of_inheritedFromSource_surjective_of_isPullback [P.InheritedFromSource
     (h : IsPullback fst snd s (Spec (.of k') ↘ Spec (.of k))) :
     Geometrically P snd ↔ Geometrically P s := by
   have closed_under_iso : P.IsClosedUnderIsomorphisms := .of_inheritedFromSource _ @Surjective
-  repeat rw [geometrically_iff]
   constructor
-  · intro h' k'' _ _ X'' fst'' snd'' h''
+  · repeat rw [iff_of_isClosedUnderIsomorphisms]
+    intro h' k'' _ _
+    let snd'' := pullback.snd s (Spec (CommRingCat.of k'') ↘ Spec (CommRingCat.of k))
+
     -- Construct common field extension of k' and k''
     let tensor_prod := k' ⊗[k] k''
     have : Nontrivial tensor_prod := by apply Module.FaithfullyFlat.lTensor_nontrivial
@@ -145,9 +147,15 @@ lemma iff_of_inheritedFromSource_surjective_of_isPullback [P.InheritedFromSource
     -- Construct the common pullback
     let X''' := pullback snd specMap'''
     let X'''' := pullback snd'' specMap''''
-    have PX''' := h' k''' X''' (pullback.fst snd specMap''')
-      (pullback.snd snd specMap''') (IsPullback.of_hasPullback _ _)
-    have : X''' ≅ X'''' := sorry -- This is pretty tedious to show. I don't know how to do this properly
+    have PX''' := h' k'''
+    have : X''' ≅ X'''' := ((IsPullback.of_hasPullback snd specMap''').paste_horiz h).isoPullback
+      ≪≫ eqToIso ?_ ≪≫
+      ((IsPullback.of_hasPullback snd'' specMap'''').paste_horiz
+        (IsPullback.of_hasPullback ..)).isoPullback.symm; swap
+    · congr 1; refine (Spec.map_comp ..).symm.trans (.trans ?_ (Spec.map_comp ..))
+      simp_rw [← CommRingCat.ofHom_comp]
+      congr 2; rw [← IsScalarTower.algebraMap_eq, Algebra.compHom_algebraMap_eq]
+      ext; simp [← IsScalarTower.algebraMap_apply]
 
     -- Use the other pullback square to propagate P to X'' along the surjective morphism
     have PX'''' := closed_under_iso.of_iso this PX'''
@@ -162,9 +170,9 @@ lemma iff_of_inheritedFromSource_surjective_of_isPullback [P.InheritedFromSource
         apply Function.surjective_to_subsingleton
       have : MorphismProperty.IsStableUnderBaseChange @Surjective := by infer_instance
       apply this.of_isPullback is_pb surj
-    apply (_ : P.InheritedFromSource @Surjective).of_hom_of_source g this PX''''
-    assumption -- this should ideally be moved into the line above
-  · intro h' k'' _ _ Y' fst' snd' h''
+    apply ObjectProperty.of_hom_of_source g this PX''''
+  · repeat rw [geometrically_iff]
+    intro h' k'' _ _ Y' fst' snd' h''
     let : Algebra k k'' := Algebra.compHom k'' (algebraMap k k')
     refine h' k'' Y' (fst' ≫ fst) snd' ?_
     convert IsPullback.paste_horiz h'' h
