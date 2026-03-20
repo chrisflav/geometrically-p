@@ -79,6 +79,30 @@ lemma Function.Surjective.irreducibleSpace {X Y : Type*} [TopologicalSpace X]
     exact (PreirreducibleSpace.isPreirreducible_univ).image _ hfc.continuousOn
   toNonempty := Nonempty.map f inferInstance
 
+lemma PreirreducibleSpace.of_forall_nonempty_inter {X : Type*} [TopologicalSpace X]
+    (H : ∀ ⦃U V : Set X⦄, IsOpen U → IsOpen V → U.Nonempty → V.Nonempty → (U ∩ V).Nonempty) :
+    PreirreducibleSpace X where
+  isPreirreducible_univ _ := by simp_all
+
+lemma IsOpenMap.denseRange_of_isPreirreducibleSpace {U X : Type*} [TopologicalSpace U]
+    [Nonempty U] [TopologicalSpace X] (f : U → X) (hf : IsOpenMap f) [PreirreducibleSpace X] :
+    DenseRange f :=
+  hf.isOpen_range.dense (Set.range_nonempty f)
+
+lemma Topology.IsOpenEmbedding.preirreducibleSpace {U X : Type*} [TopologicalSpace U]
+    [TopologicalSpace X] {f : U → X} (hf : Topology.IsOpenEmbedding f) [PreirreducibleSpace X] :
+    PreirreducibleSpace U where
+  isPreirreducible_univ := by
+    rw [← Set.preimage_univ]
+    exact .preimage PreirreducibleSpace.isPreirreducible_univ hf
+
+lemma Topology.IsOpenEmbedding.irreducibleSpace {U X : Type*} [TopologicalSpace U]
+    [TopologicalSpace X] {f : U → X} (hf : Topology.IsOpenEmbedding f) [IrreducibleSpace X]
+    [Nonempty U] :
+    IrreducibleSpace U where
+  toNonempty := ‹_›
+  __ := hf.preirreducibleSpace
+
 /-- Irreducibility can be checked on an open cover with pairwise non-empty intersections. -/
 theorem IrreducibleSpace.of_openCover {X ι : Type*} [TopologicalSpace X] [hι : Nonempty ι]
     {U : ι → TopologicalSpace.Opens X} (hU : TopologicalSpace.IsOpenCover U)
